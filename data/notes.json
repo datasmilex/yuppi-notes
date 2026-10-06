@@ -1,0 +1,84 @@
+[
+  {
+    "id": "note-1",
+    "title": "✨ YuPPi Notes'a Hoş Geldin!",
+    "content": "<p>Cıvıl cıvıl post-it not panona bayılacaksın! 🎨</p><p>Burada notlarını dilediğin gibi <b>özelleştirebilir</b>, renklendirebilir ve <i>arkadaşlarınla anlık eşitleyebilirsin</i>.</p><ul><li>📌 Önemli notları en başa <b>sabitle</b></li><li>📋 Tek tıkla içeriği <b>kopyala</b></li><li>🖼️ İstediğin kadar <b>fotoğraf yükle</b></li><li>✍️ <b>Farklı yazı tipleri</b> ve fosforlu vurgular kullan</li></ul>",
+    "color": "yellow",
+    "font": "sans",
+    "folderId": "all",
+    "isPinned": true,
+    "order": 0,
+    "images": [],
+    "lastEditedBy": {
+      "userId": "user-yunus",
+      "userName": "Yunus",
+      "userAvatar": "👑",
+      "userColor": "#F59E0B",
+      "timestamp": 1791325643696
+    },
+    "createdAt": 1791318743696,
+    "updatedAt": 1791325643696
+  },
+  {
+    "id": "note-6",
+    "title": "💡 YuPPi App Yeni Fikirler",
+    "content": "<p>Sonraki güncellemede eklenebilecek tatlı özellikler:</p><p><mark class=\"bg-pink-200 px-1 rounded\">1. Sesli not kaydı ve dikte desteği 🎙️</mark><br/>2. Masaüstü widget desteği 🪟<br/>3. Özel temalı post-it çıkartmaları (stickers) ⭐</p>",
+    "color": "pink",
+    "font": "handwriting",
+    "folderId": "ideas",
+    "isPinned": false,
+    "order": 1,
+    "images": [],
+    "lastEditedBy": {
+      "userId": "user-yunus",
+      "userName": "Yunus",
+      "userAvatar": "👑",
+      "userColor": "#F59E0B",
+      "timestamp": 1791325343696
+    },
+    "createdAt": 1791307943696,
+    "updatedAt": 1791325343696
+  },
+  {
+    "id": "note-4",
+    "title": "🛒 Haftalık Süpermarket Listesi",
+    "content": "<p>Eksikler:</p><p>☑️ Yulaf ezmesi & Badem sütü<br/>☑️ Taze fesleğen ve çeri domates<br/>⬜ Çift kavrulmuş espresso çekirdeği<br/>⬜ Avokado (olgun olanlardan 2 adet)<br/>⬜ Bitter çikolata (%70)</p>",
+    "color": "mint",
+    "font": "mono",
+    "folderId": "shopping",
+    "isPinned": false,
+    "order": 2,
+    "images": [],
+    "lastEditedBy": {
+      "userId": "user-mert",
+      "userName": "Mert",
+      "userAvatar": "⚡",
+      "userColor": "#10B981",
+      "timestamp": 1791321143696
+    },
+    "createdAt": 1791297143696,
+    "updatedAt": 1791321143696
+  },
+  {
+    "id": "note-3",
+    "title": "🍰 San Sebastian Cheesecake Tarifi",
+    "content": "<p>Fırını önceden <b>210°C</b> fansız ayarlayın. 🔥</p><p><b>Malzemeler:</b></p><ul><li>600g taze krem peynir</li><li>4 adet oda sıcaklığında yumurta</li><li>1 su bardağı toz şeker</li><li>400ml krema (%35 yağlı)</li><li>1 yemek kaşığı un</li></ul><p><i>Sırrı:</i> İçinin hafif akışkan kalması için fırından çıkınca en az 6 saat dinlendirilmeli! 😋</p>",
+    "color": "peach",
+    "font": "serif",
+    "folderId": "sweet",
+    "isPinned": false,
+    "order": 3,
+    "images": [
+      "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=800&q=80"
+    ],
+    "lastEditedBy": {
+      "userId": "user-yunus",
+      "userName": "Yunus",
+      "userAvatar": "👑",
+      "userColor": "#F59E0B",
+      "timestamp": 1791323243696
+    },
+    "createdAt": 1791282743696,
+    "updatedAt": 1791323243696
+  }
+]
