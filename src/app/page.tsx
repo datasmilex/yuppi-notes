@@ -19,18 +19,22 @@ export default function Home() {
   const [isOpenMobile, setIsOpenMobile] = useState(false);
   const [isCollapsedDesktop, setIsCollapsedDesktop] = useState(false);
 
-  // Keyboard shortcut: Press Ctrl+K for search
+  // Keyboard shortcuts: Ctrl+K search, Alt+N new note
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+        const searchInput = document.querySelector('header input[type="text"]') as HTMLInputElement;
         searchInput?.focus();
+      }
+      if (e.altKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        setIsTypeSelectorOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [setIsTypeSelectorOpen]);
 
   const handleSelectNoteType = (kind: 'quick' | 'comprehensive') => {
     setNewNoteKind(kind);
@@ -39,7 +43,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-[#FFFDF9] via-[#FAF5FF] to-[#F0FDF4]">
+    <div className="flex h-screen w-screen overflow-hidden bg-app">
       {/* Sidebar Navigation */}
       <Sidebar
         isOpenMobile={isOpenMobile}

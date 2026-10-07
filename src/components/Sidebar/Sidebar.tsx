@@ -340,7 +340,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       )}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 bg-white/95 backdrop-blur-md border-r border-purple-100/70 shadow-xl md:shadow-none transition-all duration-300 ${
+        className={`fixed md:static inset-y-0 left-0 z-40 bg-white border-r border-gray-200 shadow-xl md:shadow-none transition-all duration-300 ${
           isOpenMobile ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0'
         } ${isCollapsedDesktop ? 'md:w-20' : 'md:w-64'}`}
       >

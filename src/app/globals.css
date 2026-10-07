@@ -4,52 +4,140 @@
 @tailwind components;
 @tailwind utilities;
 
-:root, [data-theme='beige'] {
+/* ------------------------------------------------------------------
+   THEME TOKENS (RGB triplets)
+   --app      : page background
+   --surface  : panels (sidebar, header, modals, editor)
+   --g-*      : neutral scale (text / borders / subtle fills)
+   --a-*      : primary accent  (mapped to Tailwind "purple")
+   --b-*      : secondary accent (mapped to Tailwind "pink")
+------------------------------------------------------------------- */
+
+:root {
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-handwriting: 'Caveat', cursive;
   --font-mono: 'Space Mono', monospace;
   --font-serif: 'Playfair Display', serif;
-
-  --bg-app: #FBF9F5;
-  --bg-sidebar: #F5F2EB;
-  --border-theme: #E8E4DA;
-  --text-theme: #2D2926;
 }
 
-[data-theme='dark'] {
-  --bg-app: #18181B;
-  --bg-sidebar: #202024;
-  --border-theme: #333338;
-  --text-theme: #F4F4F5;
+/* Açık Bej (varsayılan) */
+:root,
+[data-theme='beige'] {
+  --app: 245 240 230;
+  --surface: 251 248 242;
+
+  --g-50: 247 243 236; --g-100: 240 234 223; --g-200: 228 220 205; --g-300: 207 197 180;
+  --g-400: 168 157 140; --g-500: 138 126 110; --g-600: 107 96 82;  --g-700: 82 72 60;
+  --g-800: 58 51 43;    --g-900: 43 38 32;    --g-950: 28 24 20;
+
+  --a-50: 250 245 237;  --a-100: 243 232 214; --a-200: 232 212 182; --a-300: 215 184 142;
+  --a-400: 194 152 102; --a-500: 172 124 74;  --a-600: 146 100 56;  --a-700: 120 80 45;
+  --a-800: 94 63 37;    --a-900: 74 50 30;    --a-950: 45 30 18;
+
+  --b-50: 253 244 240;  --b-100: 250 228 220; --b-200: 244 202 188; --b-300: 234 166 146;
+  --b-400: 219 126 103; --b-500: 201 95 73;   --b-600: 177 74 55;   --b-700: 146 59 45;
+  --b-800: 117 49 39;   --b-900: 94 41 34;    --b-950: 54 22 18;
 }
 
+/* Pudra Pembe */
 [data-theme='pink'] {
-  --bg-app: #FFF5F7;
-  --bg-sidebar: #FDEEF2;
-  --border-theme: #FCE0E8;
-  --text-theme: #701A40;
+  --app: 253 242 246;
+  --surface: 255 249 251;
+
+  --g-50: 252 245 248;  --g-100: 246 234 239; --g-200: 236 218 226; --g-300: 216 194 204;
+  --g-400: 176 150 162; --g-500: 140 116 127; --g-600: 110 89 99;   --g-700: 86 68 77;
+  --g-800: 62 48 55;    --g-900: 45 34 40;    --g-950: 28 20 24;
+
+  --a-50: 253 242 248;  --a-100: 252 231 243; --a-200: 251 207 232; --a-300: 249 168 212;
+  --a-400: 244 114 182; --a-500: 236 72 153;  --a-600: 219 39 119;  --a-700: 190 24 93;
+  --a-800: 157 23 77;   --a-900: 131 24 67;   --a-950: 80 7 36;
+
+  --b-50: 255 241 242;  --b-100: 255 228 230; --b-200: 254 205 211; --b-300: 253 164 175;
+  --b-400: 251 113 133; --b-500: 244 63 94;   --b-600: 225 29 72;   --b-700: 190 18 60;
+  --b-800: 159 18 57;   --b-900: 136 19 55;   --b-950: 76 5 25;
 }
 
+/* Bebek Mavisi */
 [data-theme='blue'] {
-  --bg-app: #F0F7FF;
-  --bg-sidebar: #E4F0FD;
-  --border-theme: #CFE2F8;
-  --text-theme: #074770;
+  --app: 239 246 255;
+  --surface: 248 251 255;
+
+  --g-50: 248 250 252;  --g-100: 241 245 249; --g-200: 226 232 240; --g-300: 203 213 225;
+  --g-400: 148 163 184; --g-500: 100 116 139; --g-600: 71 85 105;   --g-700: 51 65 85;
+  --g-800: 30 41 59;    --g-900: 15 23 42;    --g-950: 2 6 23;
+
+  --a-50: 240 249 255;  --a-100: 224 242 254; --a-200: 186 230 253; --a-300: 125 211 252;
+  --a-400: 56 189 248;  --a-500: 14 165 233;  --a-600: 2 132 199;   --a-700: 3 105 161;
+  --a-800: 7 89 133;    --a-900: 12 74 110;   --a-950: 8 47 73;
+
+  --b-50: 239 246 255;  --b-100: 219 234 254; --b-200: 191 219 254; --b-300: 147 197 253;
+  --b-400: 96 165 250;  --b-500: 59 130 246;  --b-600: 37 99 235;   --b-700: 29 78 216;
+  --b-800: 30 64 175;   --b-900: 30 58 138;   --b-950: 23 37 84;
+}
+
+/* Koyu: neutral + accent scales are inverted so "light chip / dark text" pairs flip correctly */
+[data-theme='dark'] {
+  --app: 17 17 20;
+  --surface: 28 28 32;
+
+  --g-50: 36 36 41;     --g-100: 44 44 50;    --g-200: 58 58 65;    --g-300: 82 82 91;
+  --g-400: 113 113 122; --g-500: 150 150 160; --g-600: 180 180 188; --g-700: 206 206 212;
+  --g-800: 228 228 232; --g-900: 244 244 246; --g-950: 250 250 250;
+
+  --a-50: 30 27 46;     --a-100: 46 38 74;    --a-200: 63 50 104;   --a-300: 91 72 150;
+  --a-400: 124 98 200;  --a-500: 139 92 246;  --a-600: 124 77 236;  --a-700: 196 181 253;
+  --a-800: 221 214 254; --a-900: 237 233 254; --a-950: 245 243 255;
+
+  --b-50: 42 24 34;     --b-100: 64 30 48;    --b-200: 90 36 64;    --b-300: 131 44 88;
+  --b-400: 190 60 125;  --b-500: 236 72 153;  --b-600: 219 39 119;  --b-700: 249 168 212;
+  --b-800: 251 207 232; --b-900: 252 231 243; --b-950: 253 242 248;
+
+  color-scheme: dark;
+}
+
+/* Paper scope: post-it cards always render with a neutral light palette, in every theme */
+.paper-scope {
+  --surface: 255 255 255;
+
+  --g-50: 249 250 251;  --g-100: 243 244 246; --g-200: 229 231 235; --g-300: 209 213 219;
+  --g-400: 156 163 175; --g-500: 107 114 128; --g-600: 75 85 99;    --g-700: 55 65 81;
+  --g-800: 31 41 55;    --g-900: 17 24 39;    --g-950: 3 7 18;
+
+  --a-50: 250 245 255;  --a-100: 243 232 255; --a-200: 233 213 255; --a-300: 216 180 254;
+  --a-400: 192 132 252; --a-500: 168 85 247;  --a-600: 147 51 234;  --a-700: 126 34 206;
+  --a-800: 107 33 168;  --a-900: 88 28 135;   --a-950: 59 7 100;
+
+  --b-50: 253 242 248;  --b-100: 252 231 243; --b-200: 251 207 232; --b-300: 249 168 212;
+  --b-400: 244 114 182; --b-500: 236 72 153;  --b-600: 219 39 119;  --b-700: 190 24 93;
+  --b-800: 157 23 77;   --b-900: 131 24 67;   --b-950: 80 7 36;
+
+  color-scheme: light;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-app);
-  color: var(--text-theme);
+  background-color: rgb(var(--app));
+  color: rgb(var(--g-900));
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+input,
+textarea,
+select {
+  color: inherit;
+}
+
+::selection {
+  background: rgb(var(--a-300) / 0.45);
+}
+
 /* Post-it content styles */
 mark {
   background-color: #fef08a;
+  color: #1f2937;
   padding: 0.1rem 0.35rem;
   border-radius: 0.35rem;
   box-decoration-break: clone;
@@ -65,11 +153,11 @@ mark {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
+  background: rgb(var(--g-400) / 0.4);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgb(var(--g-500) / 0.6);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -82,44 +170,18 @@ mark {
 
 /* Animations */
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
 }
-
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.2s ease-out forwards;
-}
+.animate-slide-up { animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-scale-in { animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-in  { animation: fadeIn 0.2s ease-out forwards; }

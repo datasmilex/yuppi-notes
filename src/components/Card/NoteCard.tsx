@@ -16,7 +16,7 @@ import {
   CopyPlus,
   GripVertical,
   Edit3,
-  Scaling,
+  Download,
   Maximize2,
   Minimize2,
 } from 'lucide-react';
@@ -41,7 +41,8 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
   const [sizeMenuOpen, setSizeMenuOpen] = useState<boolean>(false);
   const [isResizing, setIsResizing] = useState<boolean>(false);
   const [liveHeight, setLiveHeight] = useState<number | null>(note.customHeight || null);
-  const [liveWidth, setLiveWidth] = useState<number | null>(note.customWidth || null);
+  const [liveWidth, setLiveWidth] = useState<number | null>(null);
+  const [liveSpan, setLiveSpan] = useState<number>(1);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -108,21 +109,40 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
   // Drag-to-resize handle (mouse & touch)
   const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+    const card = cardRef.current;
+    if (!card) return;
+    const wrapper = card.parentElement as HTMLElement | null;
+    const grid = wrapper?.parentElement as HTMLElement | null;
+
+    // Grid geometry (columns follow the responsive Tailwind grid)
+    const gridStyle = grid ? getComputedStyle(grid) : null;
+    const cols = gridStyle ? gridStyle.gridTemplateColumns.split(' ').filter(Boolean).length || 1 : 1;
+    const gap = gridStyle ? parseFloat(gridStyle.columnGap) || 20 : 20;
+    const colW = grid ? (grid.clientWidth - gap * (cols - 1)) / cols : card.offsetWidth;
+    const toSpan = (w: number) => Math.max(1, Math.min(cols, Math.round((w + gap) / (colW + gap))));
+
     const startY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const startX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const currentHeight = cardRef.current?.offsetHeight || 220;
-    const currentWidth = cardRef.current?.offsetWidth || 280;
+    const startH = card.offsetHeight;
+    const startW = card.offsetWidth;
+    const maxW = grid ? grid.clientWidth - (wrapper?.offsetLeft || 0) : startW;
+
     setIsResizing(true);
+    setLiveSpan(toSpan(startW));
+    if (wrapper) wrapper.style.zIndex = '40';
+
+    let lastW = startW;
+    let lastH = startH;
 
     const onMove = (moveEvt: MouseEvent | TouchEvent) => {
-      const currentY = 'touches' in moveEvt ? moveEvt.touches[0].clientY : moveEvt.clientY;
-      const currentX = 'touches' in moveEvt ? moveEvt.touches[0].clientX : moveEvt.clientX;
-      const deltaY = currentY - startY;
-      const deltaX = currentX - startX;
-      const newHeight = Math.max(120, Math.min(900, currentHeight + deltaY));
-      const newWidth = Math.max(180, Math.min(1200, currentWidth + deltaX));
-      setLiveHeight(newHeight);
-      setLiveWidth(newWidth);
+      const cy = 'touches' in moveEvt ? moveEvt.touches[0].clientY : moveEvt.clientY;
+      const cx = 'touches' in moveEvt ? moveEvt.touches[0].clientX : moveEvt.clientX;
+      lastH = Math.max(120, Math.min(1200, startH + (cy - startY)));
+      lastW = Math.max(Math.min(colW, 180), Math.min(maxW, startW + (cx - startX)));
+      setLiveHeight(lastH);
+      setLiveWidth(lastW);
+      setLiveSpan(toSpan(lastW));
     };
 
     const onEnd = () => {
@@ -130,19 +150,24 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
       window.removeEventListener('mouseup', onEnd);
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend', onEnd);
-      setIsResizing(false);
-
-      if (cardRef.current) {
-        const finalH = cardRef.current.offsetHeight;
-        const finalW = cardRef.current.offsetWidth;
-        updateNote({ ...note, customHeight: finalH, customWidth: finalW });
-      }
+      if (wrapper) wrapper.style.zIndex = '';
+      setLiveWidth(null);
+      // Keep isResizing true for one tick so the mouseup does not trigger a card click
+      setTimeout(() => setIsResizing(false), 0);
+      updateNote({ ...note, customHeight: Math.round(lastH), colSpan: toSpan(lastW), customWidth: undefined });
     };
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onEnd);
-    window.addEventListener('touchmove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend', onEnd);
+  };
+
+  const handleResetSize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLiveHeight(null);
+    updateNote({ ...note, customHeight: undefined, customWidth: undefined, colSpan: 1, size: 'medium' });
+    showToast('Kart boyutu sıfırlandı.', 'info');
   };
 
   // Determine padding and text sizing based on note.size
@@ -248,7 +273,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
                   />
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute right-0 top-8 z-30 w-36 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 py-1.5 text-xs font-medium text-gray-700 animate-scale-in"
+                    className="absolute right-0 top-8 z-30 w-44 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 text-xs font-medium text-gray-700 animate-scale-in"
                   >
                     <button
                       onClick={() => {
@@ -267,6 +292,39 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
                       <CopyPlus className="w-3.5 h-3.5" />
                       Kopyasını Al
                     </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        const tmp = document.createElement('div');
+                        tmp.innerHTML = note.content;
+                        const text = `${note.title}\n\n${tmp.innerText || tmp.textContent || ''}`;
+                        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${(note.title || 'not').replace(/[\\/:*?"<>|]/g, '').slice(0, 60)}.txt`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        showToast('Not .txt olarak indirildi.', 'success');
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-purple-50 hover:text-purple-700 transition-colors text-left"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Dışa Aktar (.txt)
+                    </button>
+                    {(note.customHeight || (note.colSpan && note.colSpan > 1)) && (
+                      <button
+                        onClick={(e) => {
+                          setMenuOpen(false);
+                          handleResetSize(e);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-gray-600 transition-colors text-left"
+                      >
+                        <Minimize2 className="w-3.5 h-3.5" />
+                        Boyutu Sıfırla
+                      </button>
+                    )}
                     <div className="my-1 border-t border-gray-100" />
                     <button
                       onClick={handleDelete}

@@ -28,6 +28,20 @@ export const SortableNoteCard: React.FC<SortableNoteCardProps> = ({ note }) => {
   };
 
   const getColSpanClass = () => {
+    if (note.colSpan) {
+      switch (note.colSpan) {
+        case 2:
+          return 'col-span-1 sm:col-span-2';
+        case 3:
+          return 'col-span-1 sm:col-span-2 md:col-span-3';
+        case 4:
+          return 'col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4';
+        case 5:
+          return 'col-span-full';
+        default:
+          return 'col-span-1';
+      }
+    }
     switch (note.size) {
       case 'full':
         return 'col-span-full';

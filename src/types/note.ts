@@ -33,6 +33,7 @@ export interface Note {
   size?: NoteSize; // 'small' | 'medium' | 'large' | 'full'
   customHeight?: number; // Boyutlandırma ile belirlenen yükseklik
   customWidth?: number; // Boyutlandırma ile belirlenen genişlik
+  colSpan?: number; // Izgara sütun genişliği (1-5)
   scope: NoteScope; // 'local' or 'shared'
   roomId?: string; // If shared, the room ID
   lastEditedBy: {

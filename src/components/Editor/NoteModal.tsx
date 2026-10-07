@@ -189,6 +189,19 @@ export const NoteModal: React.FC = () => {
     }
   }, [title, content, drawingData, kind, color, font, folderId, isPinned, images, stickers, triggerAutoSave, isOpen]);
 
+  // Esc closes the editor (auto-save already persisted everything)
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !showStickerPicker) {
+        setActiveNoteForEdit(null);
+        setIsCreateModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, showStickerPicker, setActiveNoteForEdit, setIsCreateModalOpen]);
+
   if (!isOpen) return null;
 
   const handleClose = () => {
@@ -281,7 +294,8 @@ export const NoteModal: React.FC = () => {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col overflow-y-auto animate-fade-in transition-colors duration-300 ${colorConfig.bgClass}`}
+      className="fixed inset-0 z-50 flex flex-col overflow-y-auto animate-fade-in bg-white"
+      style={{ borderTop: `6px solid ${colorConfig.borderHex}` }}
     >
       <div className="sticky top-0 z-30 bg-white border-b border-black/8 px-4 sm:px-8 py-3 flex items-center justify-between gap-3 shadow-xs">
         {/* Left: Back & Live Save Status */}
@@ -575,6 +589,20 @@ export const NoteModal: React.FC = () => {
             fullHeight={true}
           />
         </div>
+
+        {/* Live stats */}
+        {(() => {
+          const plain = content.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').trim();
+          const words = plain ? plain.split(/\s+/).length : 0;
+          return (
+            <div className="mt-4 pt-3 border-t border-gray-200 flex items-center gap-4 text-[11px] font-semibold text-gray-500">
+              <span>{words} kelime</span>
+              <span>{plain.replace(/\s/g, '').length} karakter</span>
+              <span>~{Math.max(1, Math.ceil(words / 200))} dk okuma</span>
+              <span className="ml-auto hidden sm:inline">Esc ile kapat</span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Global Sticker Picker Modal */}

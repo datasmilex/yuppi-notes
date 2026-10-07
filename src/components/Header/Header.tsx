@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-purple-100/60 px-4 md:px-8 py-3 shadow-2xs">
+    <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 md:px-8 py-3">
       <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-3">
         {/* Mobile hamburger + Logo for mobile */}
         <div className="flex items-center gap-2.5">
