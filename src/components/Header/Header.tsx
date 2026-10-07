@@ -3,17 +3,9 @@
 import React, { useState } from 'react';
 import { useNotes } from '../../context/NotesContext';
 import { useUser } from '../../context/UserContext';
-import { useToast } from '../Common/Toast';
 import { UserProfileModal } from './UserProfileModal';
-import {
-  Menu,
-  Search,
-  Plus,
-  X,
-  Share2,
-  Check,
-  Copy,
-} from 'lucide-react';
+import { InviteModal } from '../Sidebar/InviteModal';
+import { Menu, Search, Plus, X, Share2 } from 'lucide-react';
 
 interface HeaderProps {
   onOpenMobileMenu: () => void;
@@ -27,22 +19,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
     setIsTypeSelectorOpen,
     isConnected,
     activeScope,
-    copyInviteLink,
   } = useNotes();
   const { currentUser, onlineCount } = useUser();
-  const { showToast } = useToast();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
-
-  const handleCopy = () => {
-    copyInviteLink();
-    setCopiedLink(true);
-    showToast('Davet linki kopyalandı! 🔗', 'success');
-    setTimeout(() => setCopiedLink(false), 2000);
-  };
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 md:px-8 py-3">
+    <>
+    <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 md:px-8 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
       <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-3">
         {/* Mobile hamburger + Logo for mobile */}
         <div className="flex items-center gap-2.5">
@@ -69,12 +53,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Notlarda veya yazar isminde ara..."
-              className="w-full pl-10 pr-9 py-2 rounded-2xl bg-gray-100/80 hover:bg-gray-100 focus:bg-white border border-transparent focus:border-purple-300 focus:ring-2 focus:ring-purple-100 text-xs sm:text-sm font-medium text-gray-800 placeholder-gray-400 outline-hidden transition-all shadow-inner"
+              placeholder="Ara... (Ctrl+K)"
+              aria-label="Notlarda ara"
+              className="w-full pl-10 pr-9 py-2 rounded-2xl bg-gray-100/80 hover:bg-gray-100 focus:bg-white border border-transparent focus:border-purple-300 focus:ring-2 focus:ring-purple-100 text-base sm:text-sm font-medium text-gray-800 placeholder-gray-400 outline-hidden transition-all shadow-inner"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
+                aria-label="Aramayı temizle"
                 className="absolute right-3 p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-200"
               >
                 <X className="w-3.5 h-3.5" />
@@ -88,19 +74,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
           {/* If shared scope, quick invite button */}
           {activeScope === 'shared' && (
             <button
-              onClick={handleCopy}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
-              title="Ortak Çalışma Davet Bağlantısı"
+              onClick={() => setIsInviteOpen(true)}
+              className="inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors"
+              title="Davet Linki ve QR Kod"
             >
-              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
-              <span>{copiedLink ? 'Kopyalandı!' : 'Davet Linki'}</span>
+              <Share2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Davet / QR</span>
             </button>
           )}
 
           {/* Real-time sync status badge */}
           {activeScope === 'shared' ? (
             <div
-              className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+              className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
                 isConnected
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : 'bg-amber-50 text-amber-700 border-amber-200'
@@ -116,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
               </span>
             </div>
           ) : (
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border bg-gray-50 text-gray-600 border-gray-200">
+            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border bg-gray-50 text-gray-600 border-gray-200">
               <span className="w-2 h-2 rounded-full bg-gray-400" />
               <span>Yerel Mod</span>
             </div>
@@ -134,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
             >
               {currentUser.avatar}
             </span>
-            <span className="hidden md:inline truncate max-w-[90px]">
+            <span className="hidden xl:inline truncate max-w-[90px]">
               {currentUser.name}
             </span>
           </button>
@@ -150,10 +136,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
         </div>
       </div>
 
-      <UserProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-      />
     </header>
+
+      {/* Modallar header'ın dışında: header'ın yığın bağlamı (z-30) modalı kenar çubuğunun altında bırakmasın */}
+      <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
+      <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
+    </>
   );
 };

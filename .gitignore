@@ -33,3 +33,6 @@ next-env.d.ts
 
 # electron build artifacts
 /dist-electron
+
+# runtime data (shared rooms)
+/data/

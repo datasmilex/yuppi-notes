@@ -8,17 +8,14 @@ import { NoteCard } from '../Card/NoteCard';
 
 interface SortableNoteCardProps {
   note: Note;
+  disabled?: boolean;
 }
 
-export const SortableNoteCard: React.FC<SortableNoteCardProps> = ({ note }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: note.id });
+export const SortableNoteCard: React.FC<SortableNoteCardProps> = ({ note, disabled = false }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: note.id,
+    disabled,
+  });
 
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
@@ -53,12 +50,11 @@ export const SortableNoteCard: React.FC<SortableNoteCardProps> = ({ note }) => {
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`relative w-full ${getColSpanClass()}`}
-    >
-      <NoteCard note={note} dragHandleProps={{ ...attributes, ...listeners }} />
+    <div ref={setNodeRef} style={style} className={`relative w-full ${getColSpanClass()}`}>
+      <NoteCard
+        note={note}
+        dragHandleProps={disabled ? undefined : ({ ...attributes, ...listeners } as React.HTMLAttributes<HTMLDivElement>)}
+      />
     </div>
   );
 };

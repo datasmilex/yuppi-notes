@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from '../../context/UserContext';
 import { useToast } from '../Common/Toast';
 import { X, UserCheck, Smile } from 'lucide-react';
@@ -33,6 +33,15 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
   const [name, setName] = useState(currentUser.name);
   const [avatar, setAvatar] = useState(currentUser.avatar);
   const [color, setColor] = useState(currentUser.color);
+
+  // Modal hep bağlı kalır; her açılışta kayıtlı profille başlasın (ilk render varsayılan kullanıcıyla yapılır)
+  useEffect(() => {
+    if (isOpen) {
+      setName(currentUser.name);
+      setAvatar(currentUser.avatar);
+      setColor(currentUser.color);
+    }
+  }, [isOpen, currentUser]);
 
   if (!isOpen) return null;
 

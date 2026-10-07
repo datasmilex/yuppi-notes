@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ImageGalleryProps {
@@ -17,6 +18,30 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   onRemoveImage,
 }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const count = images?.length || 0;
+  const isLightboxOpen = selectedImageIndex !== null;
+
+  // Klavye: Esc kapatır (editörü kapatmaz), ok tuşları gezinir
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setSelectedImageIndex(null);
+      } else if (e.key === 'ArrowRight') {
+        setSelectedImageIndex((prev) => (prev === null ? null : (prev + 1) % count));
+      } else if (e.key === 'ArrowLeft') {
+        setSelectedImageIndex((prev) => (prev === null ? null : (prev - 1 + count) % count));
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [isLightboxOpen, count]);
+
+  // Görsel silinince geçersiz indekste kalma
+  useEffect(() => {
+    if (selectedImageIndex !== null && selectedImageIndex >= count) setSelectedImageIndex(null);
+  }, [count, selectedImageIndex]);
 
   if (!images || images.length === 0) return null;
 
@@ -124,8 +149,9 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
         </div>
       )}
 
-      {/* Lightbox Modal */}
-      {selectedImageIndex !== null && (
+      {/* Lightbox Modal (portal: dönüştürülmüş kart/sürükleme sarmalayıcıları fixed konumu bozmasın) */}
+      {selectedImageIndex !== null &&
+        createPortal(
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -177,7 +203,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -8,6 +8,8 @@ export type NoteSize = 'small' | 'medium' | 'large' | 'full';
 
 export type NoteKind = 'quick' | 'comprehensive';
 
+export type SortMode = 'manual' | 'updated' | 'created' | 'title';
+
 export interface NoteUser {
   id: string;
   name: string;

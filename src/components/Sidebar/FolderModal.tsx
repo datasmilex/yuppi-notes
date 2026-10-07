@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Folder } from '../../types/note';
 import { useNotes } from '../../context/NotesContext';
 import { useToast } from '../Common/Toast';
@@ -9,6 +9,7 @@ import { X, FolderPlus } from 'lucide-react';
 interface FolderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  folder?: Folder | null;
 }
 
 const EMOJI_PRESETS = [
@@ -28,7 +29,7 @@ const COLOR_PRESETS = [
   '#14B8A6', // Teal
 ];
 
-export const FolderModal: React.FC<FolderModalProps> = ({ isOpen, onClose }) => {
+export const FolderModal: React.FC<FolderModalProps> = ({ isOpen, onClose, folder = null }) => {
   const { saveFolder, activeScope } = useNotes();
   const { showToast } = useToast();
 
@@ -36,27 +37,37 @@ export const FolderModal: React.FC<FolderModalProps> = ({ isOpen, onClose }) => 
   const [selectedEmoji, setSelectedEmoji] = useState('📁');
   const [selectedColor, setSelectedColor] = useState('#8B5CF6');
 
+  // Her açılışta (yeni ya da düzenleme) alanları sıfırla / doldur
+  useEffect(() => {
+    if (!isOpen) return;
+    setName(folder?.name ?? '');
+    setSelectedEmoji(folder?.emoji ?? '📁');
+    setSelectedColor(folder?.color ?? '#8B5CF6');
+  }, [isOpen, folder]);
+
   if (!isOpen) return null;
+
+  const isEditing = Boolean(folder);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    const trimmed = name.trim();
+    if (!trimmed) {
       showToast('Lütfen klasör adı girin.', 'error');
       return;
     }
 
-    const newFolder: Folder = {
-      id: 'folder-' + Date.now(),
-      name: name.trim(),
+    const saved: Folder = {
+      id: folder?.id ?? 'folder-' + Date.now(),
+      name: trimmed,
       emoji: selectedEmoji,
       color: selectedColor,
       isSystem: false,
-      scope: activeScope,
+      scope: folder?.scope ?? activeScope,
     };
 
-    saveFolder(newFolder);
-    showToast(`"${name}" klasörü oluşturuldu! 📁`, 'success');
-    setName('');
+    saveFolder(saved);
+    showToast(isEditing ? `"${trimmed}" klasörü güncellendi.` : `"${trimmed}" klasörü oluşturuldu! 📁`, 'success');
     onClose();
   };
 
@@ -77,7 +88,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({ isOpen, onClose }) => 
             >
               {selectedEmoji}
             </span>
-            <h3 className="text-lg font-bold text-gray-900">Yeni Klasör Oluştur</h3>
+            <h3 className="text-lg font-bold text-gray-900">{isEditing ? 'Klasörü Düzenle' : 'Yeni Klasör Oluştur'}</h3>
           </div>
           <button
             onClick={onClose}
@@ -98,7 +109,8 @@ export const FolderModal: React.FC<FolderModalProps> = ({ isOpen, onClose }) => 
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Örn: Gezilecek Yerler, Müzik Listeleri..."
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 text-sm font-semibold text-gray-800 outline-hidden transition-all"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200 text-base sm:text-sm font-semibold text-gray-800 outline-hidden transition-all"
+              maxLength={40}
               autoFocus
             />
           </div>
@@ -158,7 +170,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({ isOpen, onClose }) => 
               className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-transform active:scale-95"
             >
               <FolderPlus className="w-4 h-4" />
-              Klasörü Kaydet
+              {isEditing ? 'Değişiklikleri Kaydet' : 'Klasörü Kaydet'}
             </button>
           </div>
         </form>

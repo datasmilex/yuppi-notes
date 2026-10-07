@@ -43,7 +43,7 @@ async function createWindow() {
     minWidth: 780,
     minHeight: 560,
     title: 'YuPPi Notes',
-    icon: path.join(__dirname, '../public/icon.svg'),
+    icon: path.join(__dirname, '../public/icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -57,7 +57,10 @@ async function createWindow() {
   const url = `http://localhost:${PORT}`;
 
   if (!isDev) {
-    // In production packaged app, launch embedded server
+    // Paketlenmiş uygulamada gömülü sunucuyu PRODUCTION modunda başlat;
+    // veriler salt okunur asar yerine kullanıcı veri klasörüne yazılır.
+    process.env.NODE_ENV = 'production';
+    process.env.YUPPI_DATA_DIR = path.join(app.getPath('userData'), 'data');
     try {
       require('../server.js');
     } catch (e) {
@@ -89,7 +92,18 @@ async function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+// Aynı anda tek pencere: ikinci başlatma portu çakıştırmasın, mevcut pencereyi öne getirsin
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+  app.whenReady().then(createWindow);
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

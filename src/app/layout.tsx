@@ -13,16 +13,20 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.png',
-    apple: '/apple-icon.png',
+    apple: '/icon-192.png',
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'YuPPi Notes',
+    statusBarStyle: 'default',
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#FAF5FF',
+  themeColor: '#F5F0E6',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -33,9 +37,6 @@ export default function RootLayout({
   return (
     <html lang="tr" data-theme="beige" suppressHydrationWarning>
       <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="mobile-web-app-capable" content="yes" />
         <script
           dangerouslySetInnerHTML={{
             __html:
@@ -46,11 +47,11 @@ export default function RootLayout({
       <body>
         <PwaRegister />
         <ThemeProvider>
-          <UserProvider>
-            <NotesProvider>
-              <ToastProvider>{children}</ToastProvider>
-            </NotesProvider>
-          </UserProvider>
+          <ToastProvider>
+            <UserProvider>
+              <NotesProvider>{children}</NotesProvider>
+            </UserProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
