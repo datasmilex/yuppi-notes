@@ -10,7 +10,6 @@ import { FontSelector } from './FontSelector';
 import { ColorPicker } from './ColorPicker';
 import { ImageGallery } from '../Card/ImageGallery';
 import { StickerPicker } from './StickerPicker';
-import { DrawingCanvas } from './DrawingCanvas';
 import { NOTE_COLORS, NOTE_FONTS } from '../../utils/colors';
 import { StickerItem } from '../../utils/stickers';
 import {
@@ -19,7 +18,7 @@ import {
   Folder as FolderIcon,
   ImagePlus,
   Trash2,
-  Sparkles,
+  Smile,
   Check,
   Palette,
   Type,
@@ -296,7 +295,7 @@ export const NoteModal: React.FC = () => {
             <span className="hidden sm:inline">Panoya Dön</span>
           </button>
 
-          {/* Mode Switcher Toggle: Kopyalanabilir vs OneNote Kapsamlı */}
+          {/* Mode Switcher Toggle: Kopyalanabilir vs Detaylı Kapsamlı Not */}
           <div className="hidden md:flex items-center p-1 bg-gray-100/90 rounded-2xl border border-black/5 gap-1">
             <button
               type="button"
@@ -315,7 +314,6 @@ export const NoteModal: React.FC = () => {
               type="button"
               onClick={() => {
                 setKind('comprehensive');
-                setShowDrawing(true);
               }}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
                 kind === 'comprehensive'
@@ -324,7 +322,7 @@ export const NoteModal: React.FC = () => {
               }`}
             >
               <PenTool className="w-3.5 h-3.5" />
-              <span>OneNote Kapsamlı Not</span>
+              <span>Detaylı Kapsamlı Not</span>
             </button>
           </div>
 
@@ -377,23 +375,6 @@ export const NoteModal: React.FC = () => {
             </select>
           </div>
 
-          {/* Toggle Drawing Canvas (in Comprehensive mode) */}
-          {kind === 'comprehensive' && (
-            <button
-              type="button"
-              onClick={() => setShowDrawing(!showDrawing)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs ${
-                showDrawing
-                  ? 'bg-purple-600 text-white shadow-sm'
-                  : 'bg-white hover:bg-gray-50 text-gray-700 border border-black/10'
-              }`}
-              title="OneNote Çizim Tuvalini Aç/Kapat"
-            >
-              <PenTool className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Çizim Tuvali</span>
-            </button>
-          )}
-
           {/* Add Sticker Button */}
           <button
             type="button"
@@ -401,7 +382,7 @@ export const NoteModal: React.FC = () => {
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-800 text-xs font-bold transition-all shadow-2xs"
             title="Nota Sticker Yapıştır"
           >
-            <Sparkles className="w-3.5 h-3.5 text-pink-600" />
+            <Smile className="w-3.5 h-3.5 text-pink-600" />
             <span className="hidden sm:inline">Sticker</span>
           </button>
 
@@ -513,7 +494,7 @@ export const NoteModal: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Full-Screen OneNote Writing Canvas */}
+      {/* Main Full-Screen Writing Canvas */}
       <div className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-10 flex flex-col">
         {/* Banner Indicator */}
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-black/6">
@@ -523,7 +504,7 @@ export const NoteModal: React.FC = () => {
             </span>
             <span className="text-xs font-bold text-gray-700">
               {kind === 'comprehensive'
-                ? '🎨 OneNote Kapsamlı Not (Çizim & Tam Tuval)'
+                ? '📝 Detaylı Tam Sayfa Not'
                 : '📋 Kopyalanabilir Pratik Not'}
             </span>
           </div>
@@ -537,7 +518,7 @@ export const NoteModal: React.FC = () => {
         {stickers.length > 0 && (
           <div className="flex items-center gap-2 mb-4 flex-wrap p-2.5 rounded-2xl bg-white border border-black/5 shadow-2xs">
             <span className="text-xs font-bold text-gray-500 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-pink-500" />
+              <Smile className="w-3.5 h-3.5 text-pink-500" />
               Çıkartmalar:
             </span>
             {stickers.map((stk, i) => (
@@ -580,16 +561,6 @@ export const NoteModal: React.FC = () => {
           autoFocus={!isEditing}
         />
 
-        {/* OneNote Drawing Canvas (Rendered in Comprehensive mode when opened) */}
-        {kind === 'comprehensive' && showDrawing && (
-          <DrawingCanvas
-            initialData={drawingData}
-            onChange={(newData) => {
-              setDrawingData(newData);
-            }}
-          />
-        )}
-
         {/* Full-Screen Rich Text Editor */}
         <div className="flex-1 flex flex-col">
           <RichEditor
@@ -598,7 +569,7 @@ export const NoteModal: React.FC = () => {
             fontClass={fontConfig.cssClass}
             placeholder={
               kind === 'comprehensive'
-                ? 'OneNote sayfanıza notlarınızı, karalamalarınızı veya listelerinizi yazmaya başlayın...'
+                ? 'Sayfanıza notlarınızı, fikirlerinizi veya listelerinizi yazmaya başlayın...'
                 : 'Kopyalanabilir notunuzun içeriğini buraya yazın...'
             }
             fullHeight={true}

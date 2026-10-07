@@ -9,10 +9,10 @@ export interface StickerItem {
 
 export const STICKER_LIST: StickerItem[] = [
   // Emojis
-  { id: 'st-star', name: 'Yıldız', content: '⭐', category: 'emoji' },
+  { id: 'st-diamond', name: 'Elmas', content: '💎', category: 'emoji' },
   { id: 'st-heart', name: 'Kalp', content: '💖', category: 'emoji' },
   { id: 'st-fire', name: 'Alev', content: '🔥', category: 'emoji' },
-  { id: 'st-sparkle', name: 'Işıltı', content: '✨', category: 'emoji' },
+  { id: 'st-sunflower', name: 'Güneş', content: '☀️', category: 'emoji' },
   { id: 'st-rocket', name: 'Roket', content: '🚀', category: 'emoji' },
   { id: 'st-idea', name: 'Ampul', content: '💡', category: 'emoji' },
   { id: 'st-flower', name: 'Çiçek', content: '🌸', category: 'emoji' },

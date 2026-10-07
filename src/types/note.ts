@@ -28,10 +28,11 @@ export interface Note {
   tags?: string[];
   stickers?: string[]; // Stickers attached to note
   isSticky?: boolean; // Quick sticky note between notes
-  kind?: NoteKind; // 'quick' (Kopyalanabilir) or 'comprehensive' (OneNote tam sayfa çizimli)
-  drawingData?: string; // OneNote HTML5 Canvas drawing image
+  kind?: NoteKind; // 'quick' (Kopyalanabilir) or 'comprehensive' (Detaylı tam sayfa)
+  drawingData?: string; // İsteğe bağlı çizim/görsel verisi
   size?: NoteSize; // 'small' | 'medium' | 'large' | 'full'
-  customHeight?: number; // Custom drag-resized height
+  customHeight?: number; // Boyutlandırma ile belirlenen yükseklik
+  customWidth?: number; // Boyutlandırma ile belirlenen genişlik
   scope: NoteScope; // 'local' or 'shared'
   roomId?: string; // If shared, the room ID
   lastEditedBy: {

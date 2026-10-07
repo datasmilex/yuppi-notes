@@ -41,6 +41,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
   const [sizeMenuOpen, setSizeMenuOpen] = useState<boolean>(false);
   const [isResizing, setIsResizing] = useState<boolean>(false);
   const [liveHeight, setLiveHeight] = useState<number | null>(note.customHeight || null);
+  const [liveWidth, setLiveWidth] = useState<number | null>(note.customWidth || null);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +86,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
     e.stopPropagation();
     setMenuOpen(false);
     duplicateNote(note);
-    showToast('Notun kopyası oluşturuldu! ✨', 'success');
+    showToast('Notun kopyası oluşturuldu! 📋', 'success');
   };
 
   const handlePin = (e: React.MouseEvent) => {
@@ -108,14 +109,20 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
   const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
     const startY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const startX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const currentHeight = cardRef.current?.offsetHeight || 220;
+    const currentWidth = cardRef.current?.offsetWidth || 280;
     setIsResizing(true);
 
     const onMove = (moveEvt: MouseEvent | TouchEvent) => {
       const currentY = 'touches' in moveEvt ? moveEvt.touches[0].clientY : moveEvt.clientY;
-      const delta = currentY - startY;
-      const newHeight = Math.max(120, Math.min(850, currentHeight + delta));
+      const currentX = 'touches' in moveEvt ? moveEvt.touches[0].clientX : moveEvt.clientX;
+      const deltaY = currentY - startY;
+      const deltaX = currentX - startX;
+      const newHeight = Math.max(120, Math.min(900, currentHeight + deltaY));
+      const newWidth = Math.max(180, Math.min(1200, currentWidth + deltaX));
       setLiveHeight(newHeight);
+      setLiveWidth(newWidth);
     };
 
     const onEnd = () => {
@@ -127,7 +134,8 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
 
       if (cardRef.current) {
         const finalH = cardRef.current.offsetHeight;
-        updateNote({ ...note, customHeight: finalH });
+        const finalW = cardRef.current.offsetWidth;
+        updateNote({ ...note, customHeight: finalH, customWidth: finalW });
       }
     };
 
@@ -150,6 +158,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
       } ${colorConfig.bgClass} ${colorConfig.borderClass} ${colorConfig.textClass} hover:shadow-postit-hover shadow-postit mb-5 flex flex-col justify-between`}
       style={{
         minHeight: liveHeight ? `${liveHeight}px` : isSmall ? '130px' : isLarge ? '260px' : '180px',
+        width: liveWidth ? `${liveWidth}px` : undefined,
         boxShadow: `0 10px 25px -5px ${colorConfig.borderHex}40, 0 4px 10px -2px rgba(0, 0, 0, 0.04)`,
       }}
     >
@@ -157,9 +166,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-4 bg-white/40 backdrop-blur-xs rounded-sm rotate-1 shadow-2xs pointer-events-none border border-black/5" />
 
       {/* Resizing tooltip indicator while dragging */}
-      {isResizing && liveHeight && (
+      {isResizing && (liveHeight || liveWidth) && (
         <div className="absolute -top-8 right-2 z-30 px-2 py-0.5 rounded-lg bg-black text-white text-[11px] font-bold shadow-md">
-          📐 {Math.round(liveHeight)}px
+          📐 {Math.round(liveWidth || cardRef.current?.offsetWidth || 280)}x{Math.round(liveHeight || cardRef.current?.offsetHeight || 220)}px
         </div>
       )}
 
@@ -192,65 +201,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
 
           {/* Action icons */}
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            {/* Size Picker Dropdown Button */}
-            <div className="relative">
-              <button
-                onClick={() => setSizeMenuOpen(!sizeMenuOpen)}
-                className="p-1.5 rounded-xl text-black/40 hover:text-black/80 hover:bg-black/5 transition-colors"
-                title="Kart Boyutunu Değiştir"
-              >
-                <Scaling className="w-3.5 h-3.5" />
-              </button>
-
-              {sizeMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-20"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSizeMenuOpen(false);
-                    }}
-                  />
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute right-0 top-8 z-30 w-44 bg-white rounded-2xl shadow-xl border border-gray-100 p-1.5 text-xs font-semibold text-gray-700 animate-scale-in"
-                  >
-                    <div className="px-2.5 py-1 text-[10px] uppercase font-bold text-gray-400">
-                      Kart Boyutu
-                    </div>
-                    {SIZE_PRESETS.map((sz) => (
-                      <button
-                        key={sz.id}
-                        onClick={(e) => handleSizeChange(e, sz.id)}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-colors text-left ${
-                          (note.size || 'medium') === sz.id
-                            ? 'bg-purple-100 text-purple-900 font-bold'
-                            : 'hover:bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        <span>{sz.label}</span>
-                        <span>{sz.icon}</span>
-                      </button>
-                    ))}
-                    {note.customHeight && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSizeMenuOpen(false);
-                          setLiveHeight(null);
-                          updateNote({ ...note, customHeight: undefined });
-                          showToast('Yükseklik sıfırlandı.', 'info');
-                        }}
-                        className="w-full mt-1 px-2.5 py-1 text-[11px] text-gray-400 hover:text-gray-700 text-left border-t border-gray-100"
-                      >
-                        Özel Yüksekliği Sıfırla
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
             {/* Pin Button */}
             <button
               onClick={handlePin}
@@ -337,12 +287,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, dragHandleProps }) => 
           <ImageGallery images={note.images} noteTitle={note.title} />
         )}
 
-        {/* OneNote Drawing Preview */}
+        {/* Detaylı Not Çizim / Görsel Önizleme */}
         {note.drawingData && (
           <div className="relative mb-3 overflow-hidden rounded-2xl border-2 border-white/80 shadow-xs bg-white/90 aspect-[16/9] flex items-center justify-center">
             <img
               src={note.drawingData}
-              alt="OneNote Çizimi"
+              alt="Detaylı Not Görseli"
               className="w-full h-full object-contain"
               loading="lazy"
             />

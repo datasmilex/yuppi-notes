@@ -4,6 +4,7 @@ import { UserProvider } from '../context/UserContext';
 import { NotesProvider } from '../context/NotesContext';
 import { ToastProvider } from '../components/Common/Toast';
 import { PwaRegister } from '../components/Common/PwaRegister';
+import { ThemeProvider } from '../context/ThemeContext';
 
 export const metadata: Metadata = {
   title: 'YuPPi Notes - Cıvıl Cıvıl Post-it Pano',
@@ -38,11 +39,13 @@ export default function RootLayout({
       </head>
       <body>
         <PwaRegister />
-        <UserProvider>
-          <NotesProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </NotesProvider>
-        </UserProvider>
+        <ThemeProvider>
+          <UserProvider>
+            <NotesProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </NotesProvider>
+          </UserProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

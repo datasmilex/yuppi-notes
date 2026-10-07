@@ -131,7 +131,7 @@ export const NOTE_FONTS: FontOption[] = [
 ];
 
 export const DEFAULT_LOCAL_FOLDERS: Folder[] = [
-  { id: 'all_local', name: 'Tüm Notlar', emoji: '✨', color: '#6366F1', isSystem: true, scope: 'local' },
+  { id: 'all_local', name: 'Tüm Notlar', emoji: '📁', color: '#6366F1', isSystem: true, scope: 'local' },
   { id: 'personal', name: 'Kişisel', emoji: '🔒', color: '#EC4899', scope: 'local' },
   { id: 'ideas', name: 'Fikirler', emoji: '💡', color: '#F59E0B', scope: 'local' },
 ];

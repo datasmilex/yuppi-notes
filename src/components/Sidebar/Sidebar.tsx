@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useNotes } from '../../context/NotesContext';
 import { useToast } from '../Common/Toast';
 import { FolderModal } from './FolderModal';
+import { SettingsModal } from './SettingsModal';
 import {
   FolderPlus,
   Trash2,
@@ -16,7 +17,8 @@ import {
   Users,
   Layers,
   X,
-  Sparkles,
+  BookmarkCheck,
+  Settings,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -47,6 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { showToast } = useToast();
 
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isEditingRoom, setIsEditingRoom] = useState(false);
   const [roomInput, setRoomInput] = useState(currentRoomId);
@@ -288,23 +291,42 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </div>
 
-      {/* Footer Info */}
-      {!isCollapsedDesktop && (
-        <div className="p-3 border-t border-purple-100/60 bg-purple-50/20">
-          <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
+      {/* Footer Info & Settings */}
+      <div className="p-3 border-t border-gray-200/60 bg-gray-50/40">
+        {!isCollapsedDesktop && (
+          <div className="flex items-center justify-between text-xs font-semibold text-gray-500 mb-2">
             <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <BookmarkCheck className="w-3.5 h-3.5 text-purple-600" />
               {activeScope === 'local' ? 'Yerel Çalışma Alanı' : 'Ortak Çalışma Alanı'}
             </span>
             <span className="font-bold text-gray-700">{notes.filter((n) => n.scope === activeScope).length} not</span>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Settings button */}
+        <button
+          type="button"
+          onClick={() => setIsSettingsOpen(true)}
+          className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 transition-colors ${
+            isCollapsedDesktop ? 'justify-center' : 'justify-start'
+          }`}
+          title="Ayarlar & Tema"
+        >
+          <Settings className="w-4 h-4 text-gray-500" />
+          {!isCollapsedDesktop && <span className="text-xs font-bold">Ayarlar & Tema</span>}
+        </button>
+      </div>
 
       {/* New Folder Modal */}
       <FolderModal
         isOpen={isFolderModalOpen}
         onClose={() => setIsFolderModalOpen(false)}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
       />
     </div>
   );

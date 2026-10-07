@@ -22,7 +22,7 @@ import { SortableNoteCard } from './SortableNoteCard';
 import { NoteCard } from '../Card/NoteCard';
 import { QuickStickyCreator } from './QuickStickyCreator';
 import { Note } from '../../types/note';
-import { Pin, Sparkles, Plus, StickyNote, SearchX, FileEdit } from 'lucide-react';
+import { Pin, Layers, Plus, StickyNote, SearchX, FileEdit } from 'lucide-react';
 
 export const NotesBoard: React.FC = () => {
   const {
@@ -149,7 +149,7 @@ export const NotesBoard: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <span className="p-1.5 rounded-xl bg-purple-100 text-purple-700 shadow-2xs">
-                <Sparkles className="w-4 h-4" />
+                <Layers className="w-4 h-4" />
               </span>
               <h2 className="text-xs font-black uppercase tracking-wider text-gray-600">
                 {pinnedNotes.length > 0 ? 'Notlar' : 'Tüm Notlar'}

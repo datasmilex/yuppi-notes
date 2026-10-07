@@ -62,14 +62,14 @@ export default function Home() {
           <Plus className="w-7 h-7" />
         </button>
 
-        {/* 2-Option Selector Modal: Kopyalanabilir vs OneNote Kapsamlı */}
+        {/* 2-Option Selector Modal: Kopyalanabilir vs Detaylı Kapsamlı Not */}
         <NewNoteTypeModal
           isOpen={isTypeSelectorOpen}
           onClose={() => setIsTypeSelectorOpen(false)}
           onSelectType={handleSelectNoteType}
         />
 
-        {/* Full-Page OneNote Canvas & Editor */}
+        {/* Full-Page Editor Modal */}
         <NoteModal />
       </main>
     </div>

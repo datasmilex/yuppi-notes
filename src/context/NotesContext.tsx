@@ -73,24 +73,24 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Initialize Local notes & folders from LocalStorage (strip out old mock notes)
   useEffect(() => {
     try {
-      const savedLocalNotes = localStorage.getItem('yuppi_notes_v2');
-      if (savedLocalNotes) {
+      const savedLocalNotes = localStorage.getItem('yuppi_notes_v3') || localStorage.getItem('yuppi_notes_v2');
+      if (savedLocalNotes && !savedLocalNotes.includes('Ã') && !savedLocalNotes.includes('Å')) {
         const parsed = JSON.parse(savedLocalNotes);
-        // Exclude old mock notes if they exist
         const cleaned = parsed.filter((n: Note) => !n.id.startsWith('note-1') && !n.id.startsWith('note-2') && !n.id.startsWith('note-3'));
         setNotes(cleaned);
       } else {
         setNotes([]);
       }
 
-      const savedFolders = localStorage.getItem('yuppi_folders_v2');
-      if (savedFolders) {
+      const savedFolders = localStorage.getItem('yuppi_folders_v3') || localStorage.getItem('yuppi_folders_v2');
+      if (savedFolders && !savedFolders.includes('Ã') && !savedFolders.includes('Å')) {
         setFolders(JSON.parse(savedFolders));
       } else {
         setFolders(DEFAULT_FOLDERS);
       }
     } catch {
       setNotes([]);
+      setFolders(DEFAULT_FOLDERS);
     }
   }, []);
 
@@ -106,9 +106,9 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Save changes to localStorage for local items
   const persistState = useCallback((updatedNotes: Note[], updatedFolders?: Folder[]) => {
     try {
-      localStorage.setItem('yuppi_notes_v2', JSON.stringify(updatedNotes));
+      localStorage.setItem('yuppi_notes_v3', JSON.stringify(updatedNotes));
       if (updatedFolders) {
-        localStorage.setItem('yuppi_folders_v2', JSON.stringify(updatedFolders));
+        localStorage.setItem('yuppi_folders_v3', JSON.stringify(updatedFolders));
       }
     } catch {}
   }, []);

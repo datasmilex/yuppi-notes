@@ -4,20 +4,47 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root, [data-theme='beige'] {
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-handwriting: 'Caveat', cursive;
   --font-mono: 'Space Mono', monospace;
   --font-serif: 'Playfair Display', serif;
+
+  --bg-app: #FBF9F5;
+  --bg-sidebar: #F5F2EB;
+  --border-theme: #E8E4DA;
+  --text-theme: #2D2926;
+}
+
+[data-theme='dark'] {
+  --bg-app: #18181B;
+  --bg-sidebar: #202024;
+  --border-theme: #333338;
+  --text-theme: #F4F4F5;
+}
+
+[data-theme='pink'] {
+  --bg-app: #FFF5F7;
+  --bg-sidebar: #FDEEF2;
+  --border-theme: #FCE0E8;
+  --text-theme: #701A40;
+}
+
+[data-theme='blue'] {
+  --bg-app: #F0F7FF;
+  --bg-sidebar: #E4F0FD;
+  --border-theme: #CFE2F8;
+  --text-theme: #074770;
 }
 
 body {
   font-family: var(--font-sans);
-  background: radial-gradient(circle at 10% 20%, #faf5ff 0%, #fff7ed 40%, #f0fdf4 90%);
+  background-color: var(--bg-app);
+  color: var(--text-theme);
   min-height: 100vh;
-  color: #1e293b;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* Post-it content styles */

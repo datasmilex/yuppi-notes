@@ -65,7 +65,7 @@ export const NewNoteTypeModal: React.FC<NewNoteTypeModalProps> = ({
             </span>
           </button>
 
-          {/* Option 2: Kapsamlı Not (OneNote Tarzı) */}
+          {/* Option 2: Detaylı Not (Tam Sayfa) */}
           <button
             type="button"
             onClick={() => onSelectType('comprehensive')}
@@ -75,13 +75,13 @@ export const NewNoteTypeModal: React.FC<NewNoteTypeModalProps> = ({
               <PenTool className="w-6 h-6" />
             </div>
             <h4 className="font-extrabold text-base text-gray-900 mb-1">
-              Kapsamlı Not (OneNote)
+              Detaylı Not (Tam Sayfa)
             </h4>
             <p className="text-xs text-gray-600 leading-relaxed mb-3">
-              Tam sayfa çalışma alanı; serbest çizim tuvali, fosforlu kalem, silgi, zengin metin ve çıkartmalar.
+              Geniş çalışma alanı; zengin metin biçimlendirme, fosforlu vurgu, fotoğraflar ve çıkartmalar.
             </p>
             <span className="mt-auto text-[11px] font-bold text-purple-800 bg-purple-200/80 px-2 py-0.5 rounded-full">
-              🎨 Çizim & Tam Tuval
+              📝 Tam Sayfa & Zengin Editör
             </span>
           </button>
         </div>
