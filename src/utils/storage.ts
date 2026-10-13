@@ -45,6 +45,36 @@ export async function kvGet<T>(key: string): Promise<T | undefined> {
   }
 }
 
+export async function kvDel(key: string): Promise<void> {
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  } catch {
+    try {
+      localStorage.removeItem(`kv:${key}`);
+    } catch {
+      // yoksay
+    }
+  }
+}
+
+/** Tarayıcının bu site için ayırdığı/kullandığı depolama alanı (destekleniyorsa). */
+export async function storageEstimate(): Promise<{ usage: number; quota: number } | null> {
+  try {
+    if (!navigator.storage?.estimate) return null;
+    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    return { usage, quota };
+  } catch {
+    return null;
+  }
+}
+
 export async function kvSet<T>(key: string, value: T): Promise<void> {
   try {
     const db = await openDb();

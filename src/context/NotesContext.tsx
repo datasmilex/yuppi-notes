@@ -10,9 +10,10 @@ import React, {
   useRef,
 } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Note, Folder, NoteColor, NoteScope, NoteKind, SortMode } from '../types/note';
+import { Note, Folder, NoteColor, NoteScope, SortMode, BoardView, NoteSeed } from '../types/note';
 import { DEFAULT_FOLDERS, DEFAULT_SHARED_FOLDERS } from '../utils/colors';
-import { ensureSystemFolders, normalizeNote, normalizeTags, noteSearchText } from '../utils/notes';
+import { ensureSystemFolders, isTrashExpired, normalizeNote, noteSearchText } from '../utils/notes';
+import { clearNoteHistory } from '../utils/history';
 import { kvGet, kvSet } from '../utils/storage';
 import { copyText, uid } from '../utils/text';
 import { useUser } from './UserContext';
@@ -23,15 +24,30 @@ export interface TagInfo {
   count: number;
 }
 
+export type ViewCounts = Record<BoardView, number>;
+
+interface WriteOptions {
+  /** false: yalnızca düzen/durum değişikliği; "son düzenleyen" imzası ve updatedAt korunur. */
+  touch?: boolean;
+}
+
+interface NewNoteRequest {
+  id: number;
+  seed: NoteSeed;
+}
+
 interface NotesContextType {
   notes: Note[];
   folders: Folder[];
   scopeFolders: Folder[];
+  scopeNotes: Note[];
   hydrated: boolean;
   activeScope: NoteScope;
   setActiveScope: (scope: NoteScope) => void;
   currentRoomId: string;
   setCurrentRoomId: (roomId: string) => void;
+  activeView: BoardView;
+  setActiveView: (view: BoardView) => void;
   activeFolderId: string;
   setActiveFolderId: (id: string) => void;
   searchQuery: string;
@@ -43,26 +59,39 @@ interface NotesContextType {
   sortMode: SortMode;
   setSortMode: (mode: SortMode) => void;
   allTags: TagInfo[];
+  viewCounts: ViewCounts;
+  folderCounts: Map<string, number>;
   filteredNotes: Note[];
   pinnedNotes: Note[];
   unpinnedNotes: Note[];
   createNote: (note: Partial<Note>) => Note;
-  updateNote: (note: Note) => void;
-  patchNote: (id: string, patch: Partial<Note>) => void;
+  updateNote: (note: Note, options?: WriteOptions) => void;
+  patchNote: (id: string, patch: Partial<Note>, options?: WriteOptions) => void;
   deleteNote: (id: string) => void;
+  restoreNote: (id: string) => void;
+  deleteForever: (id: string) => void;
+  emptyTrash: () => number;
+  setArchived: (id: string, archived: boolean) => void;
+  setReminder: (id: string, at: number | null) => void;
   togglePin: (id: string) => void;
+  bulkPatch: (ids: string[], patch: Partial<Note>) => void;
+  bulkTrash: (ids: string[]) => void;
+  bulkRestore: (ids: string[]) => void;
+  bulkDeleteForever: (ids: string[]) => void;
   reorderNotes: (activeId: string, overId: string) => void;
   saveFolder: (folder: Folder) => void;
   deleteFolder: (id: string) => void;
   isConnected: boolean;
   activeNoteForEdit: Note | null;
   setActiveNoteForEdit: (note: Note | null) => void;
+  getNote: (id: string) => Note | undefined;
+  openNoteById: (id: string) => void;
   isCreateModalOpen: boolean;
   setIsCreateModalOpen: (open: boolean) => void;
   isTypeSelectorOpen: boolean;
   setIsTypeSelectorOpen: (open: boolean) => void;
-  newNoteKind: NoteKind;
-  setNewNoteKind: (kind: NoteKind) => void;
+  newNoteRequest: NewNoteRequest | null;
+  startNewNote: (seed?: NoteSeed) => void;
   duplicateNote: (note: Note) => void;
   getInviteLink: () => Promise<string>;
   copyInviteLink: () => Promise<{ url: string; ok: boolean }>;
@@ -107,7 +136,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [hydrated, setHydrated] = useState(false);
   const [activeScope, setActiveScope] = useState<NoteScope>('local');
   const [currentRoomId, setRoomState] = useState<string>('ana-oda');
-  const [activeFolderId, setActiveFolderId] = useState<string>('all_local');
+  const [activeView, setActiveViewState] = useState<BoardView>('notes');
+  const [activeFolderId, setActiveFolderState] = useState<string>('all_local');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeColor, setActiveColor] = useState<NoteColor | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -116,7 +146,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [activeNoteForEdit, setActiveNoteForEdit] = useState<Note | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isTypeSelectorOpen, setIsTypeSelectorOpen] = useState<boolean>(false);
-  const [newNoteKind, setNewNoteKind] = useState<NoteKind>('comprehensive');
+  const [newNoteRequest, setNewNoteRequest] = useState<NewNoteRequest | null>(null);
 
   // Güncel değerler ref'lerde tutulur: socket olayları ve ardışık işlemler bayat state görmesin
   const notesRef = useRef<Note[]>([]);
@@ -137,6 +167,21 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setFoldersState(next);
   }, []);
 
+  // Klasör seçmek her zaman normal not görünümüne döndürür (arşiv/çöp klasöre göre süzülmez)
+  const setActiveFolderId = useCallback((id: string) => {
+    setActiveFolderState(id);
+    setActiveViewState('notes');
+  }, []);
+
+  // Akıllı görünümler (hatırlatıcı/arşiv/çöp) klasörden bağımsızdır; klasör seçimi "Tüm Notlar"a döner
+  const setActiveView = useCallback(
+    (view: BoardView) => {
+      setActiveViewState(view);
+      if (view !== 'notes') setActiveFolderState(activeScope === 'local' ? 'all_local' : 'all_shared');
+    },
+    [activeScope]
+  );
+
   // ---------- Tercihler & davet linki ----------
   useEffect(() => {
     try {
@@ -150,7 +195,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (roomParam && cleanRoomId(roomParam)) {
       setRoomState(cleanRoomId(roomParam));
       setActiveScope('shared');
-      setActiveFolderId('all_shared');
+      setActiveFolderState('all_shared');
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -183,6 +228,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   // ---------- Yükleme (IndexedDB, eski localStorage'dan taşıma) ----------
+  const skipPersistRef = useRef(false);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -197,11 +244,16 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!storedFolders) storedFolders = readLegacy<Folder>(LEGACY_FOLDER_KEYS) || DEFAULT_FOLDERS;
       if (cancelled) return;
 
-      const nextNotes = storedNotes.map(normalizeNote);
+      const normalized = storedNotes.map(normalizeNote);
+      // Çöpte saklama süresi dolan yerel notlar açılışta kalıcı olarak temizlenir
+      const expired = normalized.filter((n) => n.scope === 'local' && isTrashExpired(n));
+      const nextNotes = expired.length ? normalized.filter((n) => !expired.includes(n)) : normalized;
+      expired.forEach((n) => void clearNoteHistory(n.id));
+
       const nextFolders = ensureSystemFolders(storedFolders);
       notesRef.current = nextNotes;
       foldersRef.current = nextFolders;
-      skipPersistRef.current = loadedFromDb;
+      skipPersistRef.current = loadedFromDb && expired.length === 0;
       setNotesState(nextNotes);
       setFoldersState(nextFolders);
       setHydrated(true);
@@ -212,7 +264,6 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   // ---------- Kalıcılık ----------
-  const skipPersistRef = useRef(false);
   const dirtyRef = useRef(false);
   const channelRef = useRef<BroadcastChannel | null>(null);
   const tabIdRef = useRef(Math.random().toString(36).slice(2));
@@ -282,9 +333,10 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [hydrated, commitNotes, commitFolders]);
 
-  // Kapsam değişince klasör/etiket filtresini sıfırla
+  // Kapsam değişince görünüm/klasör/etiket filtresini sıfırla
   useEffect(() => {
-    setActiveFolderId(activeScope === 'local' ? 'all_local' : 'all_shared');
+    setActiveFolderState(activeScope === 'local' ? 'all_local' : 'all_shared');
+    setActiveViewState('notes');
     setActiveTag(null);
   }, [activeScope]);
 
@@ -323,7 +375,11 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (data.roomId && data.roomId !== room) return;
 
       if (Array.isArray(data.notes)) {
-        const remote = data.notes.map(asShared);
+        const all = data.notes.map(asShared);
+        // Ortak çöpte süresi dolanlar odadan da kalıcı olarak silinir
+        const expired = all.filter((n) => isTrashExpired(n));
+        expired.forEach((n) => socket.emit('note:delete', { noteId: n.id, roomId: room }));
+        const remote = expired.length ? all.filter((n) => !expired.includes(n)) : all;
         commitNotes((prev) => [...prev.filter((n) => !isThisRoom(n)), ...remote]);
       }
 
@@ -383,7 +439,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     socket.on('folder:deleted', (folderId: string) => {
       commitFolders((prev) => prev.filter((f) => f.id !== folderId));
       commitNotes((prev) => prev.map((n) => (n.folderId === folderId ? { ...n, folderId: 'all_shared' } : n)));
-      setActiveFolderId((current) => (current === folderId ? 'all_shared' : current));
+      setActiveFolderState((current) => (current === folderId ? 'all_shared' : current));
     });
 
     return () => {
@@ -461,13 +517,13 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const updateNote = useCallback(
-    (updatedNote: Note) => {
+    (updatedNote: Note, options: WriteOptions = {}) => {
+      const touch = options.touch !== false;
       const now = Date.now();
       const noteToSave = normalizeNote({
         ...updatedNote,
         title: updatedNote.title.trim() || 'Başlıksız Not',
-        lastEditedBy: signature(now),
-        updatedAt: now,
+        ...(touch ? { lastEditedBy: signature(now), updatedAt: now } : {}),
       });
 
       commitNotes((prev) =>
@@ -482,45 +538,98 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   /** Mevcut notun GÜNCEL halini baz alarak kısmi güncelleme yapar (bayat prop'lar eski veriyi ezmesin). */
   const patchNote = useCallback(
-    (id: string, patch: Partial<Note>) => {
+    (id: string, patch: Partial<Note>, options?: WriteOptions) => {
       const current = notesRef.current.find((n) => n.id === id);
       if (!current) return;
-      updateNote({ ...current, ...patch });
+      updateNote({ ...current, ...patch }, options);
     },
     [updateNote]
   );
 
+  const bulkPatch = useCallback(
+    (ids: string[], patch: Partial<Note>) => {
+      ids.forEach((id) => patchNote(id, patch, { touch: false }));
+    },
+    [patchNote]
+  );
+
   const restoreNote = useCallback(
-    (note: Note, index: number) => {
-      commitNotes((prev) => {
-        if (prev.some((n) => n.id === note.id)) return prev;
-        const next = [...prev];
-        next.splice(Math.min(index, next.length), 0, note);
-        return next;
+    (id: string) => patchNote(id, { deletedAt: null }, { touch: false }),
+    [patchNote]
+  );
+
+  const bulkRestore = useCallback((ids: string[]) => ids.forEach(restoreNote), [restoreNote]);
+
+  /** Notu çöp kutusuna taşır; "Geri Al" ile anında geri getirilebilir. */
+  const deleteNote = useCallback(
+    (id: string) => {
+      const target = notesRef.current.find((n) => n.id === id);
+      if (!target || target.deletedAt) return;
+      patchNote(id, { deletedAt: Date.now(), isPinned: false }, { touch: false });
+      showToast('Not çöp kutusuna taşındı.', 'info', {
+        icon: '🗑️',
+        action: { label: 'Geri Al', onClick: () => patchNote(id, { deletedAt: null, isPinned: target.isPinned }, { touch: false }) },
       });
-      if (note.scope === 'shared') emitShared('note:create', { note });
+    },
+    [patchNote, showToast]
+  );
+
+  const bulkTrash = useCallback(
+    (ids: string[]) => {
+      const targets = notesRef.current.filter((n) => ids.includes(n.id) && !n.deletedAt);
+      if (!targets.length) return;
+      const now = Date.now();
+      targets.forEach((n) => patchNote(n.id, { deletedAt: now, isPinned: false }, { touch: false }));
+      showToast(`${targets.length} not çöp kutusuna taşındı.`, 'info', {
+        icon: '🗑️',
+        action: {
+          label: 'Geri Al',
+          onClick: () => targets.forEach((n) => patchNote(n.id, { deletedAt: null, isPinned: n.isPinned }, { touch: false })),
+        },
+      });
+    },
+    [patchNote, showToast]
+  );
+
+  const removeNotes = useCallback(
+    (ids: string[]) => {
+      if (!ids.length) return;
+      const idSet = new Set(ids);
+      const shared = notesRef.current.filter((n) => idSet.has(n.id) && n.scope === 'shared');
+      commitNotes((prev) => prev.filter((n) => !idSet.has(n.id)));
+      shared.forEach((n) => emitShared('note:delete', { noteId: n.id }));
+      ids.forEach((id) => void clearNoteHistory(id));
     },
     [commitNotes, emitShared]
   );
 
-  const deleteNote = useCallback(
-    (id: string) => {
-      const target = notesRef.current.find((n) => n.id === id);
-      if (!target) return;
-      const index = notesRef.current.indexOf(target);
-      commitNotes((prev) => prev.filter((n) => n.id !== id));
-      if (target.scope === 'shared') emitShared('note:delete', { noteId: id });
-      showToast('Not silindi.', 'info', {
-        action: { label: 'Geri Al', onClick: () => restoreNote(target, index) },
+  const deleteForever = useCallback((id: string) => removeNotes([id]), [removeNotes]);
+  const bulkDeleteForever = useCallback((ids: string[]) => removeNotes(ids), [removeNotes]);
+
+  const setArchived = useCallback(
+    (id: string, archived: boolean) => {
+      const wasPinned = Boolean(notesRef.current.find((n) => n.id === id)?.isPinned);
+      patchNote(id, archived ? { isArchived: true, isPinned: false } : { isArchived: false }, { touch: false });
+      showToast(archived ? 'Not arşivlendi.' : 'Not arşivden çıkarıldı.', 'info', {
+        icon: archived ? '📦' : '📤',
+        action: {
+          label: 'Geri Al',
+          onClick: () => patchNote(id, { isArchived: !archived, isPinned: wasPinned }, { touch: false }),
+        },
       });
     },
-    [commitNotes, emitShared, restoreNote, showToast]
+    [patchNote, showToast]
+  );
+
+  const setReminder = useCallback(
+    (id: string, at: number | null) => patchNote(id, { reminderAt: at }, { touch: false }),
+    [patchNote]
   );
 
   const togglePin = useCallback(
     (id: string) => {
       const target = notesRef.current.find((n) => n.id === id);
-      if (target) patchNote(id, { isPinned: !target.isPinned });
+      if (target) patchNote(id, { isPinned: !target.isPinned }, { touch: false });
     },
     [patchNote]
   );
@@ -533,6 +642,9 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         id: uid(),
         title: `${source.title} (Kopya)`,
         isPinned: false,
+        isArchived: false,
+        deletedAt: null,
+        reminderAt: null,
         order: 0,
         createdAt: now,
         updatedAt: now,
@@ -570,6 +682,27 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [currentRoomId, commitNotes, emitShared]
   );
 
+  /** Notun en güncel hali (render beklemeden; ör. editör kapanırken yazılan son kayıt dahil). */
+  const getNote = useCallback((id: string) => notesRef.current.find((n) => n.id === id), []);
+
+  const openNoteById = useCallback((id: string) => {
+    const target = notesRef.current.find((n) => n.id === id);
+    if (!target) return;
+    setIsCreateModalOpen(false);
+    setActiveNoteForEdit(target);
+  }, []);
+
+  const requestCounter = useRef(0);
+  const startNewNote = useCallback((seed: NoteSeed = {}) => {
+    requestCounter.current += 1;
+    setNewNoteRequest({ id: requestCounter.current, seed });
+    setIsTypeSelectorOpen(false);
+    setActiveNoteForEdit(null);
+    setIsCreateModalOpen(true);
+    // Yeni not arşiv/çöp görünümünde kaybolmasın
+    setActiveViewState((view) => (view === 'archive' || view === 'trash' ? 'notes' : view));
+  }, []);
+
   // ---------- Klasörler ----------
   const saveFolder = useCallback(
     (folder: Folder) => {
@@ -597,7 +730,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const defaultFolder = target.scope === 'local' ? 'all_local' : 'all_shared';
       commitFolders((prev) => prev.filter((f) => f.id !== folderId));
       commitNotes((prev) => prev.map((n) => (n.folderId === folderId ? { ...n, folderId: defaultFolder } : n)));
-      setActiveFolderId((current) => (current === folderId ? defaultFolder : current));
+      setActiveFolderState((current) => (current === folderId ? defaultFolder : current));
 
       if (target.scope === 'shared') emitShared('folder:delete', { folderId });
     },
@@ -609,7 +742,7 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return JSON.stringify(
       {
         app: 'yuppi-notes',
-        version: 2,
+        version: 3,
         exportedAt: new Date().toISOString(),
         notes: notesRef.current.filter((n) => n.scope === 'local'),
         folders: foldersRef.current.filter((f) => f.scope === 'local' && !f.isSystem),
@@ -671,9 +804,41 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [notes, activeScope, currentRoomId]
   );
 
+  const emptyTrash = useCallback(() => {
+    const ids = scopeNotes.filter((n) => n.deletedAt).map((n) => n.id);
+    removeNotes(ids);
+    return ids.length;
+  }, [scopeNotes, removeNotes]);
+
+  const viewCounts = useMemo<ViewCounts>(() => {
+    const counts: ViewCounts = { notes: 0, reminders: 0, archive: 0, trash: 0 };
+    scopeNotes.forEach((n) => {
+      if (n.deletedAt) {
+        counts.trash += 1;
+        return;
+      }
+      if (n.isArchived) counts.archive += 1;
+      else counts.notes += 1;
+      if (n.reminderAt) counts.reminders += 1;
+    });
+    return counts;
+  }, [scopeNotes]);
+
+  const folderCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    scopeNotes.forEach((n) => {
+      if (n.deletedAt || n.isArchived) return;
+      counts.set(n.folderId, (counts.get(n.folderId) || 0) + 1);
+    });
+    return counts;
+  }, [scopeNotes]);
+
   const allTags = useMemo<TagInfo[]>(() => {
     const counts = new Map<string, number>();
-    scopeNotes.forEach((n) => (n.tags || []).forEach((t) => counts.set(t, (counts.get(t) || 0) + 1)));
+    scopeNotes.forEach((n) => {
+      if (n.deletedAt) return;
+      (n.tags || []).forEach((t) => counts.set(t, (counts.get(t) || 0) + 1));
+    });
     return Array.from(counts, ([tag, count]) => ({ tag, count })).sort(
       (a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'tr')
     );
@@ -681,33 +846,54 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const filteredNotes = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase('tr-TR');
+    const inFolder = activeView === 'notes' && activeFolderId && !activeFolderId.startsWith('all_');
     const result = scopeNotes.filter((note) => {
-      if (activeFolderId && !activeFolderId.startsWith('all_') && note.folderId !== activeFolderId) return false;
+      if (activeView === 'trash') {
+        if (!note.deletedAt) return false;
+      } else {
+        if (note.deletedAt) return false;
+        if (activeView === 'notes' && note.isArchived) return false;
+        if (activeView === 'archive' && !note.isArchived) return false;
+        if (activeView === 'reminders' && !note.reminderAt) return false;
+      }
+      if (inFolder && note.folderId !== activeFolderId) return false;
       if (activeColor && note.color !== activeColor) return false;
       if (activeTag && !(note.tags || []).includes(activeTag)) return false;
       if (query && !noteSearchText(note, stripTags).includes(query)) return false;
       return true;
     });
 
+    if (activeView === 'reminders') return [...result].sort((a, b) => (a.reminderAt || 0) - (b.reminderAt || 0));
+    if (activeView === 'trash') return [...result].sort((a, b) => (b.deletedAt || 0) - (a.deletedAt || 0));
     if (sortMode === 'updated') return [...result].sort((a, b) => b.updatedAt - a.updatedAt);
     if (sortMode === 'created') return [...result].sort((a, b) => b.createdAt - a.createdAt);
     if (sortMode === 'title') return [...result].sort((a, b) => a.title.localeCompare(b.title, 'tr'));
     return result;
-  }, [scopeNotes, activeFolderId, activeColor, activeTag, searchQuery, sortMode]);
+  }, [scopeNotes, activeView, activeFolderId, activeColor, activeTag, searchQuery, sortMode]);
 
-  const pinnedNotes = useMemo(() => filteredNotes.filter((n) => n.isPinned), [filteredNotes]);
-  const unpinnedNotes = useMemo(() => filteredNotes.filter((n) => !n.isPinned), [filteredNotes]);
+  // Sabitlenenler yalnızca normal görünümde ayrı bölümde gösterilir
+  const pinnedNotes = useMemo(
+    () => (activeView === 'notes' ? filteredNotes.filter((n) => n.isPinned) : []),
+    [filteredNotes, activeView]
+  );
+  const unpinnedNotes = useMemo(
+    () => (activeView === 'notes' ? filteredNotes.filter((n) => !n.isPinned) : filteredNotes),
+    [filteredNotes, activeView]
+  );
 
   const value = useMemo<NotesContextType>(
     () => ({
       notes,
       folders,
       scopeFolders,
+      scopeNotes,
       hydrated,
       activeScope,
       setActiveScope,
       currentRoomId,
       setCurrentRoomId,
+      activeView,
+      setActiveView,
       activeFolderId,
       setActiveFolderId,
       searchQuery,
@@ -719,6 +905,8 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       sortMode,
       setSortMode,
       allTags,
+      viewCounts,
+      folderCounts,
       filteredNotes,
       pinnedNotes,
       unpinnedNotes,
@@ -726,19 +914,30 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateNote,
       patchNote,
       deleteNote,
+      restoreNote,
+      deleteForever,
+      emptyTrash,
+      setArchived,
+      setReminder,
       togglePin,
+      bulkPatch,
+      bulkTrash,
+      bulkRestore,
+      bulkDeleteForever,
       reorderNotes,
       saveFolder,
       deleteFolder,
       isConnected,
       activeNoteForEdit,
       setActiveNoteForEdit,
+      getNote,
+      openNoteById,
       isCreateModalOpen,
       setIsCreateModalOpen,
       isTypeSelectorOpen,
       setIsTypeSelectorOpen,
-      newNoteKind,
-      setNewNoteKind,
+      newNoteRequest,
+      startNewNote,
       duplicateNote,
       getInviteLink,
       copyInviteLink,
@@ -746,11 +945,13 @@ export const NotesProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       importBackup,
     }),
     [
-      notes, folders, scopeFolders, hydrated, activeScope, currentRoomId, setCurrentRoomId, activeFolderId,
-      searchQuery, activeColor, activeTag, sortMode, setSortMode, allTags, filteredNotes, pinnedNotes,
-      unpinnedNotes, createNote, updateNote, patchNote, deleteNote, togglePin, reorderNotes, saveFolder,
-      deleteFolder, isConnected, activeNoteForEdit, isCreateModalOpen, isTypeSelectorOpen, newNoteKind,
-      duplicateNote, getInviteLink, copyInviteLink, exportBackup, importBackup,
+      notes, folders, scopeFolders, scopeNotes, hydrated, activeScope, currentRoomId, setCurrentRoomId,
+      activeView, setActiveView, activeFolderId, setActiveFolderId, searchQuery, activeColor, activeTag,
+      sortMode, setSortMode, allTags, viewCounts, folderCounts, filteredNotes, pinnedNotes, unpinnedNotes,
+      createNote, updateNote, patchNote, deleteNote, restoreNote, deleteForever, emptyTrash, setArchived,
+      setReminder, togglePin, bulkPatch, bulkTrash, bulkRestore, bulkDeleteForever, reorderNotes, saveFolder,
+      deleteFolder, isConnected, activeNoteForEdit, getNote, openNoteById, isCreateModalOpen, isTypeSelectorOpen,
+      newNoteRequest, startNewNote, duplicateNote, getInviteLink, copyInviteLink, exportBackup, importBackup,
     ]
   );
 

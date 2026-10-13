@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useNotes } from '../../context/NotesContext';
+import { useUI } from '../../context/UIContext';
 import { useToast } from '../Common/Toast';
+import { useConfirm } from '../Common/Confirm';
 import { FolderModal } from './FolderModal';
-import { SettingsModal } from './SettingsModal';
 import { InviteModal } from './InviteModal';
-import { Folder } from '../../types/note';
+import { BoardView, Folder } from '../../types/note';
 import {
   FolderPlus,
   Trash2,
@@ -20,10 +21,14 @@ import {
   Users,
   Layers,
   X,
-  BookmarkCheck,
   Settings,
   Hash,
   QrCode,
+  Bell,
+  Archive,
+  BarChart3,
+  Keyboard,
+  NotebookPen,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -43,7 +48,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     scopeFolders,
     activeFolderId,
     setActiveFolderId,
-    notes,
+    activeView,
+    setActiveView,
+    viewCounts,
+    folderCounts,
     deleteFolder,
     activeScope,
     setActiveScope,
@@ -54,34 +62,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
     activeTag,
     setActiveTag,
   } = useNotes();
+  const { setOpenModal } = useUI();
   const { showToast } = useToast();
+  const confirm = useConfirm();
 
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isEditingRoom, setIsEditingRoom] = useState(false);
   const [roomInput, setRoomInput] = useState('');
 
-  const scopeNotes = useMemo(
-    () =>
-      notes.filter(
-        (n) => n.scope === activeScope && (activeScope === 'local' || !n.roomId || n.roomId === currentRoomId)
-      ),
-    [notes, activeScope, currentRoomId]
-  );
+  // Mobilde kenar çubuğu tamamen açık görünür; daraltma yalnızca masaüstünde geçerli
+  const collapsed = isCollapsedDesktop && !isOpenMobile;
+  const systemFolder = scopeFolders.find((f) => f.isSystem);
+  const customFolders = scopeFolders.filter((f) => !f.isSystem);
 
-  const getNoteCount = (folderId: string) =>
-    folderId.startsWith('all_') ? scopeNotes.length : scopeNotes.filter((n) => n.folderId === folderId).length;
-
-  const handleDeleteFolder = (e: React.MouseEvent, folderId: string, folderName: string) => {
+  const handleDeleteFolder = async (e: React.MouseEvent, folderId: string, folderName: string) => {
     e.stopPropagation();
-    if (
-      window.confirm(
-        `"${folderName}" klasörünü silmek istediğinize emin misiniz? (İçindeki notlar ana listeye taşınacaktır.)`
-      )
-    ) {
+    const ok = await confirm({
+      title: `"${folderName}" klasörü silinsin mi?`,
+      message: 'İçindeki notlar silinmez; "Tüm Notlar" altına taşınır.',
+      confirmLabel: 'Klasörü Sil',
+      danger: true,
+    });
+    if (ok) {
       deleteFolder(folderId);
       showToast(`"${folderName}" klasörü silindi.`, 'info');
     }
@@ -112,6 +117,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setIsFolderModalOpen(true);
   };
 
+  const selectView = (view: BoardView) => {
+    setActiveView(view);
+    onCloseMobile();
+  };
+
+  const selectFolder = (id: string) => {
+    setActiveFolderId(id);
+    onCloseMobile();
+  };
+
+  const smartViews: { view: BoardView; label: string; icon: React.ReactNode; count: number; tone: string }[] = [
+    { view: 'reminders', label: 'Hatırlatıcılar', icon: <Bell className="w-4 h-4" />, count: viewCounts.reminders, tone: 'text-purple-600' },
+    { view: 'archive', label: 'Arşiv', icon: <Archive className="w-4 h-4" />, count: viewCounts.archive, tone: 'text-gray-500' },
+    { view: 'trash', label: 'Çöp Kutusu', icon: <Trash2 className="w-4 h-4" />, count: viewCounts.trash, tone: 'text-red-500' },
+  ];
+
   const content = (
     <div className="flex flex-col h-full select-none">
       {/* Brand & App Title */}
@@ -120,7 +141,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-400 via-pink-400 to-purple-500 flex items-center justify-center text-white text-lg shadow-md shadow-pink-500/20 flex-shrink-0">
             📝
           </div>
-          {!isCollapsedDesktop && (
+          {!collapsed && (
             <div className="overflow-hidden">
               <h1 className="font-black text-base bg-gradient-to-r from-purple-700 via-pink-600 to-amber-600 bg-clip-text text-transparent truncate tracking-tight">
                 YuPPi Notes
@@ -142,13 +163,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onToggleDesktop}
           className="hidden md:flex p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-purple-100/50"
           title={isCollapsedDesktop ? 'Genişlet' : 'Daralt'}
+          aria-label={isCollapsedDesktop ? 'Kenar çubuğunu genişlet' : 'Kenar çubuğunu daralt'}
         >
           {isCollapsedDesktop ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
 
       {/* Scope Switcher: YEREL vs ORTAK */}
-      {!isCollapsedDesktop ? (
+      {!collapsed ? (
         <div className="p-3 border-b border-purple-100/50 bg-gray-50/60">
           <div className="grid grid-cols-2 p-1 bg-gray-200/70 rounded-2xl gap-1">
             <button
@@ -200,7 +222,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Shared Room Box (ORTAK sekmesinde) */}
-      {activeScope === 'shared' && !isCollapsedDesktop && (
+      {activeScope === 'shared' && !collapsed && (
         <div className="m-3 p-3 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200/70 shadow-xs">
           <div className="flex items-center justify-between mb-1.5 gap-2">
             {isEditingRoom ? (
@@ -271,127 +293,130 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* Folders List Header */}
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-        {!isCollapsedDesktop ? (
-          <>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5" />
-              {activeScope === 'local' ? 'Yerel Klasörler' : 'Ortak Klasörler'}
-            </span>
-            <button
-              onClick={openNewFolder}
-              className="p-1 rounded-lg text-purple-600 hover:bg-purple-100/70 transition-colors"
-              title="Yeni Klasör Ekle"
-            >
-              <FolderPlus className="w-4 h-4" />
-            </button>
-          </>
-        ) : (
-          <div className="w-full flex justify-center">
-            <button
-              onClick={openNewFolder}
-              className="p-1.5 rounded-xl bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
-              title="Yeni Klasör Ekle"
-            >
-              <FolderPlus className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Folder Items + Tags */}
-      <div className="flex-1 overflow-y-auto px-3 py-1">
+      <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label="Notlar">
+        {/* Görünümler */}
         <div className="space-y-1">
-          {scopeFolders.map((folder) => {
-            const isActive = activeFolderId === folder.id;
-            const count = getNoteCount(folder.id);
-            const select = () => {
-              setActiveFolderId(folder.id);
-              onCloseMobile();
-            };
+          {systemFolder && (
+            <NavRow
+              collapsed={collapsed}
+              active={activeView === 'notes' && activeFolderId === systemFolder.id}
+              icon={<span className="text-base">{systemFolder.emoji}</span>}
+              label={systemFolder.name}
+              count={viewCounts.notes}
+              onClick={() => selectFolder(systemFolder.id)}
+            />
+          )}
+          {smartViews.map((v) => (
+            <NavRow
+              key={v.view}
+              collapsed={collapsed}
+              active={activeView === v.view}
+              icon={<span className={activeView === v.view ? '' : v.tone}>{v.icon}</span>}
+              label={v.label}
+              count={v.count}
+              onClick={() => selectView(v.view)}
+            />
+          ))}
+        </div>
 
-            return (
-              <div
-                key={folder.id}
-                role="button"
-                tabIndex={0}
-                onClick={select}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    select();
-                  }
-                }}
-                title={isCollapsedDesktop ? folder.name : undefined}
-                className={`group flex items-center justify-between p-2.5 rounded-2xl cursor-pointer transition-all duration-200 ${
-                  isActive
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-bold'
-                    : 'text-gray-700 hover:bg-purple-50/70 hover:text-purple-900 font-medium'
-                }`}
+        {/* Folders List Header */}
+        <div className="px-1 pt-5 pb-2 flex items-center justify-between">
+          {!collapsed ? (
+            <>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5" />
+                {activeScope === 'local' ? 'Yerel Klasörler' : 'Ortak Klasörler'}
+              </span>
+              <button
+                onClick={openNewFolder}
+                className="p-1 rounded-lg text-purple-600 hover:bg-purple-100/70 transition-colors"
+                title="Yeni Klasör Ekle"
+                aria-label="Yeni klasör ekle"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="text-base flex-shrink-0">{folder.emoji}</span>
-                  {!isCollapsedDesktop && <span className="text-xs truncate">{folder.name}</span>}
-                </div>
+                <FolderPlus className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <div className="w-full flex justify-center">
+              <button
+                onClick={openNewFolder}
+                className="p-1.5 rounded-xl bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+                title="Yeni Klasör Ekle"
+                aria-label="Yeni klasör ekle"
+              >
+                <FolderPlus className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
 
-                {!isCollapsedDesktop && (
-                  <div className="flex items-center gap-1">
-                    <span
-                      className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
-                        isActive ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
+        <div className="space-y-1">
+          {customFolders.length === 0 && !collapsed && (
+            <button
+              type="button"
+              onClick={openNewFolder}
+              className="w-full p-3 rounded-2xl border border-dashed border-gray-300 text-[11px] font-semibold text-gray-500 hover:text-purple-700 hover:border-purple-300"
+            >
+              + İlk klasörünü oluştur
+            </button>
+          )}
+          {customFolders.map((folder) => {
+            const isActive = activeView === 'notes' && activeFolderId === folder.id;
+            return (
+              <NavRow
+                key={folder.id}
+                collapsed={collapsed}
+                active={isActive}
+                icon={<span className="text-base">{folder.emoji}</span>}
+                label={folder.name}
+                count={folderCounts.get(folder.id) || 0}
+                accent={folder.color}
+                onClick={() => selectFolder(folder.id)}
+                actions={
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingFolder(folder);
+                        setIsFolderModalOpen(true);
+                      }}
+                      className={`p-1 rounded-md transition-all hover:scale-110 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 ${
+                        isActive
+                          ? 'text-white/80 hover:text-white hover:bg-white/20'
+                          : 'text-gray-400 hover:text-purple-700 hover:bg-purple-50'
                       }`}
+                      title="Klasörü Düzenle"
+                      aria-label={`${folder.name} klasörünü düzenle`}
                     >
-                      {count}
-                    </span>
-
-                    {!folder.isSystem && (
-                      <>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingFolder(folder);
-                            setIsFolderModalOpen(true);
-                          }}
-                          className={`p-1 rounded-md transition-all hover:scale-110 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 ${
-                            isActive
-                              ? 'text-white/80 hover:text-white hover:bg-white/20'
-                              : 'text-gray-400 hover:text-purple-700 hover:bg-purple-50'
-                          }`}
-                          title="Klasörü Düzenle"
-                          aria-label={`${folder.name} klasörünü düzenle`}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteFolder(e, folder.id, folder.name)}
-                          className={`p-1 rounded-md transition-all hover:scale-110 ${
-                            isActive
-                              ? 'text-white/80 hover:text-white hover:bg-white/20'
-                              : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
-                          }`}
-                          title="Klasörü Sil"
-                          aria-label={`${folder.name} klasörünü sil`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteFolder(e, folder.id, folder.name)}
+                      className={`p-1 rounded-md transition-all hover:scale-110 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 ${
+                        isActive
+                          ? 'text-white/80 hover:text-white hover:bg-white/20'
+                          : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                      }`}
+                      title="Klasörü Sil"
+                      aria-label={`${folder.name} klasörünü sil`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                }
+              />
             );
           })}
         </div>
 
-        {!isCollapsedDesktop && allTags.length > 0 && (
+        {!collapsed && allTags.length > 0 && (
           <div className="mt-5 mb-3">
             <div className="px-1 pb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
               <Hash className="w-3.5 h-3.5" />
               Etiketler
             </div>
             <div className="flex flex-wrap gap-1.5 px-1">
-              {allTags.slice(0, 20).map(({ tag, count }) => (
+              {allTags.slice(0, 24).map(({ tag, count }) => (
                 <button
                   key={tag}
                   onClick={() => {
@@ -410,31 +435,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
         )}
-      </div>
+      </nav>
 
-      {/* Footer Info & Settings */}
+      {/* Footer: araçlar */}
       <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-200/60 bg-gray-50/40">
-        {!isCollapsedDesktop && (
-          <div className="flex items-center justify-between text-xs font-semibold text-gray-500 mb-2">
+        {!collapsed && (
+          <div className="flex items-center justify-between text-xs font-semibold text-gray-500 mb-2 px-1">
             <span className="flex items-center gap-1.5">
-              <BookmarkCheck className="w-3.5 h-3.5 text-purple-600" />
+              <NotebookPen className="w-3.5 h-3.5 text-purple-600" />
               {activeScope === 'local' ? 'Yerel Çalışma Alanı' : 'Ortak Çalışma Alanı'}
             </span>
-            <span className="font-bold text-gray-700">{scopeNotes.length} not</span>
+            <span className="font-bold text-gray-700">{viewCounts.notes + viewCounts.archive} not</span>
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={() => setIsSettingsOpen(true)}
-          className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 transition-colors ${
-            isCollapsedDesktop ? 'justify-center' : 'justify-start'
-          }`}
-          title="Ayarlar, Tema & Yedekleme"
-        >
-          <Settings className="w-4 h-4 text-gray-500" />
-          {!isCollapsedDesktop && <span className="text-xs font-bold">Ayarlar, Tema & Yedek</span>}
-        </button>
+        <div className={collapsed ? 'flex flex-col gap-1' : 'grid grid-cols-3 gap-1'}>
+          <FooterButton collapsed={collapsed} label="İstatistik" icon={<BarChart3 className="w-4 h-4" />} onClick={() => { setOpenModal('stats'); onCloseMobile(); }} />
+          <FooterButton collapsed={collapsed} label="Kısayollar" icon={<Keyboard className="w-4 h-4" />} onClick={() => { setOpenModal('shortcuts'); onCloseMobile(); }} />
+          <FooterButton collapsed={collapsed} label="Ayarlar" icon={<Settings className="w-4 h-4" />} onClick={() => { setOpenModal('settings'); onCloseMobile(); }} />
+        </div>
       </div>
     </div>
   );
@@ -464,8 +483,79 @@ export const Sidebar: React.FC<SidebarProps> = ({
           setEditingFolder(null);
         }}
       />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
     </>
   );
 };
+
+const NavRow: React.FC<{
+  collapsed: boolean;
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  accent?: string;
+  onClick: () => void;
+  actions?: React.ReactNode;
+}> = ({ collapsed, active, icon, label, count, accent, onClick, actions }) => (
+  <div
+    role="button"
+    tabIndex={0}
+    onClick={onClick}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick();
+      }
+    }}
+    title={collapsed ? `${label} (${count})` : undefined}
+    aria-current={active ? 'page' : undefined}
+    className={`group relative flex items-center justify-between p-2.5 rounded-2xl cursor-pointer transition-all duration-200 ${
+      collapsed ? 'justify-center' : ''
+    } ${
+      active
+        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-bold'
+        : 'text-gray-700 hover:bg-purple-50/70 hover:text-purple-900 font-medium'
+    }`}
+  >
+    {accent && !active && !collapsed && (
+      <span className="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full" style={{ backgroundColor: accent }} aria-hidden="true" />
+    )}
+    <div className="flex items-center gap-2.5 min-w-0">
+      <span className="flex-shrink-0 w-5 flex justify-center">{icon}</span>
+      {!collapsed && <span className="text-xs truncate">{label}</span>}
+    </div>
+    {collapsed && count > 0 && (
+      <span className={`absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-black flex items-center justify-center ${active ? 'bg-white text-purple-700' : 'bg-purple-600 text-white'}`}>
+        {count > 99 ? '99+' : count}
+      </span>
+    )}
+    {!collapsed && (
+      <div className="flex items-center gap-1">
+        <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${active ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'}`}>
+          {count}
+        </span>
+        {actions}
+      </div>
+    )}
+  </div>
+);
+
+const FooterButton: React.FC<{ collapsed: boolean; label: string; icon: React.ReactNode; onClick: () => void }> = ({
+  collapsed,
+  label,
+  icon,
+  onClick,
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`flex items-center justify-center rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 transition-colors ${
+      collapsed ? 'p-2' : 'flex-col gap-1 py-2'
+    }`}
+    title={label}
+  >
+    {icon}
+    {!collapsed && <span className="text-[10px] font-bold">{label}</span>}
+  </button>
+);

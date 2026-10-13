@@ -1,7 +1,7 @@
 {
   "name": "yuppi-notes",
-  "version": "1.0.0",
-  "description": "YuPPi Notes - Cıvıl cıvıl, gerçek zamanlı post-it not uygulaması (Web, Mobil PWA, Windows EXE)",
+  "version": "2.0.0",
+  "description": "YuPPi Notes - Cıvıl cıvıl, gerçek zamanlı post-it not uygulaması: hatırlatıcılar, şablonlar, arşiv, sürüm geçmişi (Web, Mobil PWA, Windows EXE)",
   "main": "electron/main.js",
   "scripts": {
     "dev": "node server.js",

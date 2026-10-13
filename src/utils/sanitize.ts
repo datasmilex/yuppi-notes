@@ -2,8 +2,11 @@ import { escapeHtml } from './text';
 
 const ALLOWED_TAGS = new Set([
   'P', 'DIV', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'STRIKE', 'DEL', 'MARK', 'SPAN',
-  'UL', 'OL', 'LI', 'H1', 'H2', 'H3', 'BLOCKQUOTE', 'CODE', 'PRE', 'HR',
+  'UL', 'OL', 'LI', 'H1', 'H2', 'H3', 'BLOCKQUOTE', 'CODE', 'PRE', 'HR', 'A',
 ]);
+
+// Yalnızca bu şemalara giden bağlantılar korunur (javascript:, data: vb. atılır)
+const SAFE_HREF = /^(https?:|mailto:|tel:)/i;
 
 const DROP_WITH_CONTENT = new Set([
   'SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'LINK', 'META', 'SVG', 'MATH', 'TEMPLATE', 'FORM', 'NOSCRIPT',
@@ -11,7 +14,7 @@ const DROP_WITH_CONTENT = new Set([
 
 const ALLOWED_STYLE_PROPS = new Set([
   'background-color', 'background', 'color', 'font-weight', 'font-style', 'font-size', 'text-decoration',
-  'display', 'padding', 'margin', 'border', 'border-radius', 'vertical-align', 'user-select',
+  'display', 'padding', 'margin', 'border', 'border-radius', 'vertical-align', 'user-select', 'text-align',
 ]);
 
 function cleanStyle(style: string): string {
@@ -64,10 +67,23 @@ function cleanNode(node: Node, stripStyles: boolean): void {
         el.setAttribute('data-checklist', 'true');
       } else if (name === 'data-checked' && tag === 'LI') {
         el.setAttribute('data-checked', attr.value === 'true' ? 'true' : 'false');
+      } else if (name === 'href' && tag === 'A' && SAFE_HREF.test(attr.value.trim())) {
+        el.setAttribute('href', attr.value.trim());
       } else {
         el.removeAttribute(attr.name);
       }
     });
+
+    if (tag === 'A') {
+      if (el.hasAttribute('href')) {
+        el.setAttribute('target', '_blank');
+        el.setAttribute('rel', 'noopener noreferrer nofollow');
+      } else {
+        // Güvensiz/boş bağlantı: metni koru, etiketi kaldır
+        while (el.firstChild) node.insertBefore(el.firstChild, el);
+        node.removeChild(el);
+      }
+    }
   });
 }
 

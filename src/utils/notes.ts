@@ -37,6 +37,9 @@ export function normalizeNote(raw: any): Note {
           : 'all_shared'
         : raw.folderId,
     isPinned: Boolean(raw?.isPinned),
+    isArchived: Boolean(raw?.isArchived),
+    deletedAt: Number.isFinite(raw?.deletedAt) ? raw.deletedAt : null,
+    reminderAt: Number.isFinite(raw?.reminderAt) ? raw.reminderAt : null,
     order: Number.isFinite(raw?.order) ? raw.order : 0,
     images: Array.isArray(raw?.images) ? raw.images.filter((i: unknown) => typeof i === 'string') : [],
     tags: normalizeTags(raw?.tags),
@@ -62,6 +65,19 @@ export function ensureSystemFolders(folders: Folder[]): Folder[] {
     if (!result.some((f) => f.id === sys.id)) result.unshift(sys);
   });
   return result;
+}
+
+/** Çöp kutusundaki notlar bu süre sonunda kalıcı olarak silinir. */
+export const TRASH_RETENTION_DAYS = 30;
+const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+export function isTrashExpired(note: Note, now = Date.now()): boolean {
+  return Boolean(note.deletedAt && now - note.deletedAt > TRASH_RETENTION_MS);
+}
+
+export function trashDaysLeft(note: Note, now = Date.now()): number {
+  if (!note.deletedAt) return TRASH_RETENTION_DAYS;
+  return Math.max(0, Math.ceil((note.deletedAt + TRASH_RETENTION_MS - now) / (24 * 60 * 60 * 1000)));
 }
 
 export function noteSearchText(note: Note, htmlToText: (html: string) => string): string {

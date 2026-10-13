@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { useNotes } from '../../context/NotesContext';
 import { useToast } from '../Common/Toast';
+import { ModalShell } from '../Common/ModalShell';
 import { copyText } from '../../utils/text';
-import { X, Copy, Check, Smartphone, Wifi } from 'lucide-react';
+import { Copy, Check, Smartphone, Wifi, Share2 } from 'lucide-react';
 
 interface InviteModalProps {
   isOpen: boolean;
@@ -43,9 +44,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose }) => 
     };
   }, [isOpen, getInviteLink]);
 
-  if (!isOpen) return null;
-
   const isLocalhost = /\/\/(localhost|127\.0\.0\.1)/.test(url);
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
   const handleCopy = async () => {
     const ok = await copyText(url);
@@ -58,75 +58,75 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose }) => 
     }
   };
 
+  const handleShare = async () => {
+    try {
+      await navigator.share({ title: 'YuPPi Notes ortak pano', text: `"${currentRoomId}" panoma katıl:`, url });
+    } catch {
+      // paylaşım iptal edildi
+    }
+  };
+
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Telefonda Aç / Davet Et"
+      subtitle={
+        <>
+          Oda: <strong className="text-purple-700">{currentRoomId}</strong> · {isConnected ? 'Canlı' : 'Bağlanıyor...'}
+        </>
+      }
+      icon={<Smartphone className="w-5 h-5" />}
+      size="sm"
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 animate-scale-in"
-      >
-        <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
-          <div className="flex items-center gap-2.5">
-            <span className="p-2 rounded-2xl bg-purple-100 text-purple-700">
-              <Smartphone className="w-5 h-5" />
-            </span>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Telefonda Aç / Davet Et</h3>
-              <p className="text-xs text-gray-500">
-                Oda: <strong className="text-purple-700">{currentRoomId}</strong> ·{' '}
-                {isConnected ? 'Canlı' : 'Bağlanıyor...'}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-            aria-label="Kapat"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="flex justify-center mb-4">
-          <div className="w-[240px] h-[240px] rounded-2xl bg-white border border-black/10 shadow-xs flex items-center justify-center overflow-hidden">
-            {qr ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={qr} alt="Davet QR kodu" width={240} height={240} />
-            ) : (
-              <span className="text-xs font-semibold text-gray-400">QR hazırlanıyor...</span>
-            )}
-          </div>
-        </div>
-
-        <p className="text-xs text-gray-500 text-center mb-3 leading-relaxed flex items-start gap-1.5 justify-center">
-          <Wifi className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-          <span>Telefonun kamerasıyla QR kodu okut. Cihazlar aynı Wi-Fi ağında olmalıdır.</span>
-        </p>
-
-        {isLocalhost && (
-          <p className="text-[11px] font-semibold text-amber-800 bg-amber-100 rounded-xl px-3 py-2 mb-3">
-            Yerel ağ adresi bulunamadı; bu bağlantı yalnızca bu bilgisayarda çalışır.
-          </p>
-        )}
-
-        <div className="flex items-center gap-2">
-          <input
-            readOnly
-            value={url}
-            onFocus={(e) => e.currentTarget.select()}
-            className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 outline-hidden"
-          />
-          <button
-            onClick={handleCopy}
-            className="flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-colors"
-          >
-            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? 'Kopyalandı' : 'Kopyala'}
-          </button>
+      <div className="flex justify-center mb-4">
+        <div className="w-[240px] h-[240px] rounded-2xl bg-[#ffffff] border border-black/10 shadow-xs flex items-center justify-center overflow-hidden">
+          {qr ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={qr} alt="Davet QR kodu" width={240} height={240} />
+          ) : (
+            <span className="text-xs font-semibold text-gray-400">QR hazırlanıyor...</span>
+          )}
         </div>
       </div>
-    </div>
+
+      <p className="text-xs text-gray-500 text-center mb-3 leading-relaxed flex items-start gap-1.5 justify-center">
+        <Wifi className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+        <span>Telefonun kamerasıyla QR kodu okut. Cihazlar aynı Wi-Fi ağında olmalıdır.</span>
+      </p>
+
+      {isLocalhost && (
+        <p className="text-[11px] font-semibold text-amber-800 bg-amber-100 rounded-xl px-3 py-2 mb-3">
+          Yerel ağ adresi bulunamadı; bu bağlantı yalnızca bu bilgisayarda çalışır.
+        </p>
+      )}
+
+      <div className="flex items-center gap-2">
+        <input
+          readOnly
+          value={url}
+          onFocus={(e) => e.currentTarget.select()}
+          aria-label="Davet bağlantısı"
+          className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 outline-hidden"
+        />
+        <button
+          onClick={handleCopy}
+          className="flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-colors"
+        >
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? 'Kopyalandı' : 'Kopyala'}
+        </button>
+        {canShare && (
+          <button
+            onClick={handleShare}
+            className="flex-shrink-0 p-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
+            title="Paylaş"
+            aria-label="Paylaş"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    </ModalShell>
   );
 };

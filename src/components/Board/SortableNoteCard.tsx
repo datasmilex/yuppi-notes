@@ -3,15 +3,17 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Note } from '../../types/note';
+import { Note, ViewMode } from '../../types/note';
 import { NoteCard } from '../Card/NoteCard';
+import { NoteListRow } from '../Card/NoteListRow';
 
 interface SortableNoteCardProps {
   note: Note;
   disabled?: boolean;
+  variant?: ViewMode;
 }
 
-export const SortableNoteCard: React.FC<SortableNoteCardProps> = ({ note, disabled = false }) => {
+export const SortableNoteCard: React.FC<SortableNoteCardProps> = ({ note, disabled = false, variant = 'grid' }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: note.id,
     disabled,
@@ -23,6 +25,16 @@ export const SortableNoteCard: React.FC<SortableNoteCardProps> = ({ note, disabl
     opacity: isDragging ? 0.35 : 1,
     zIndex: isDragging ? 50 : 1,
   };
+
+  const dragHandleProps = disabled ? undefined : ({ ...attributes, ...listeners } as React.HTMLAttributes<HTMLDivElement>);
+
+  if (variant === 'list') {
+    return (
+      <div ref={setNodeRef} style={style} className="relative w-full">
+        <NoteListRow note={note} dragHandleProps={dragHandleProps} />
+      </div>
+    );
+  }
 
   const getColSpanClass = () => {
     if (note.colSpan) {
@@ -51,10 +63,7 @@ export const SortableNoteCard: React.FC<SortableNoteCardProps> = ({ note, disabl
 
   return (
     <div ref={setNodeRef} style={style} className={`relative w-full ${getColSpanClass()}`}>
-      <NoteCard
-        note={note}
-        dragHandleProps={disabled ? undefined : ({ ...attributes, ...listeners } as React.HTMLAttributes<HTMLDivElement>)}
-      />
+      <NoteCard note={note} dragHandleProps={dragHandleProps} resizable={!note.deletedAt} />
     </div>
   );
 };

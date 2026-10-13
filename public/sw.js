@@ -1,5 +1,5 @@
 // YuPPi Notes Service Worker
-const CACHE_NAME = 'yuppi-notes-v2';
+const CACHE_NAME = 'yuppi-notes-v3';
 const SHELL = ['/', '/manifest.json', '/icon.svg', '/icon-192.png'];
 
 self.addEventListener('install', (event) => {

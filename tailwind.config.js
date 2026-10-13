@@ -13,6 +13,8 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
     './src/utils/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/context/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/hooks/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -31,6 +33,8 @@ module.exports = {
         pink: themed('b'),
         surface: 'rgb(var(--surface) / <alpha-value>)',
         app: 'rgb(var(--app) / <alpha-value>)',
+        ink: 'rgb(var(--ink) / <alpha-value>)',
+        'on-ink': 'rgb(var(--on-ink) / <alpha-value>)',
       },
       // Only backgrounds named "white" become the theme surface; text-white stays white.
       backgroundColor: {

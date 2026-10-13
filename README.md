@@ -1,49 +1,74 @@
-# 📝 YuPPi Notes
+# 📝 YuPPi Notes 2.0
 
-**YuPPi Notes**, modern post-it kartları konseptinde tasarlanmış; **Web**, **Mobil (PWA)** ve **Windows Masaüstü (.EXE)** platformlarında sorunsuz çalışan, cıvıl cıvıl ve gerçek zamanlı işbirlikçi bir not panosu uygulamasıdır.
+**YuPPi Notes**, modern post-it kartları konseptinde tasarlanmış; **Web**, **Mobil (PWA)** ve **Windows Masaüstü (.EXE)** platformlarında çalışan, cıvıl cıvıl ve gerçek zamanlı işbirlikçi bir not panosu uygulamasıdır.
 
 ---
 
 ## 🌟 Öne Çıkan Özellikler
 
-### 1. Not Kartları ve Görsel Tasarım
-* 📌 **Mini Pano (Masonry Grid) Düzeni:** Notlar ekran boyutuna göre 1-5 sütunlu, ferah ve post-it kartları şeklinde yan yana/alt alta listelenir.
-* 🎨 **Cıvıl Cıvıl Pastel Renk Paleti:** Her nota özel arka plan rengi:
-  - 💛 Pastel Sarı
-  - 💜 Lavanta
-  - 🌸 Pudra Pembe
-  - 🌿 Nane Yeşili
-  - 🌊 Bebek Mavisi
-  - 🍑 Şeftali
-  - 🍉 Mercan Pembesi
-  - 🤍 Kar Beyazı
-* 🖐️ **Sürükle-Bırak (Drag-and-Drop):** Not kartları tutma kulpu (grip) ile fareyle veya mobilde parmakla tutularak istenilen sıraya sürüklenebilir. Sıralama anında tüm bağlı kullanıcılara yansır.
-* 📋 **Tek Tıkla Kopyalama:** Her kartın üst köşesindeki pratik kopyalama butonuna tıklandığı an notun tüm içeriği panoya kopyalanır ve bildirim gösterilir.
-* 📸 **Fotoğraf Ekleme & Galeri:** Notlara tek veya çoklu görsel yüklenebilir; görseller kartın üstünde estetik polaroid/çerçeve düzeniyle önizlenir ve tıklandığında tam ekran lightbox açılır.
+### 1. Not Kartları ve Pano
+* 📌 **Izgara & Liste Görünümü:** Notlar 1-5 sütunlu post-it ızgarasında ya da yoğun, taranabilir bir liste halinde gösterilir. Kart yoğunluğu (Rahat / Sıkışık) ayarlanabilir.
+* 🎨 **Pastel Renk Paleti:** Pastel Sarı, Lavanta, Pudra Pembe, Nane Yeşili, Bebek Mavisi, Şeftali, Mercan Pembesi, Kar Beyazı.
+* 🖐️ **Sürükle-Bırak & Boyutlandırma:** Kartlar tutma kulpuyla sıralanır, sağ alt köşeden genişletilir/uzatılır; sıralama anında tüm bağlı kullanıcılara yansır.
+* ✅ **Toplu Seçim & İşlemler:** `Shift + Tık` ya da seçim modu ile birden çok notu seç; tek seferde sabitle, renk değiştir, klasöre taşı, arşivle, Markdown olarak indir veya sil.
+* 🔍 **Arama Vurgusu:** Aranan ifade kart başlıklarında fosforlu kalemle işaretlenir.
 
-### 2. Metin Düzenleme ve Tipografi
-* ✍️ **Zengin Metin Editörü (Rich Text):**
-  - **Kalın (Bold)**, *İtalik*, ~~Üstü Çizili~~
-  - 🖍️ **Fosforlu Vurgu (Highlight):** Sarı, yeşil ve pembe fosforlu kalem etkisi
-  - 🔘 **Madde İmleri (Bullet List)** ve 🔢 **Numaralı Liste**
-  - ☑️ **Yapılacaklar Kutusu (Interactive Checklist)**
-* 🔤 **Not Bazında Font Seçimi:**
-  - **Modern Sans:** Temiz ve okunaklı
-  - **El Yazısı (Handwriting):** Samimi ve doğal günlük el yazısı (*Caveat*)
-  - **Daktilo (Monospace):** Retro daktilo ve kod fontu (*Space Mono*)
-  - **Zarif Roman (Serif):** Klasik ve estetik edebi kitap stili (*Playfair Display*)
+### 2. Organizasyon
+* 📁 **Klasörler:** Her klasöre özel emoji ve renk; not sayıları kenar çubuğunda.
+* 🏷️ **Etiketler:** `#etiket` ile süzme, öneri listesi.
+* ⏰ **Hatırlatıcılar:** "1 saat sonra", "Bu akşam", "Yarın sabah", "Hafta sonu" gibi hızlı seçenekler veya istenen tarih/saat. Zamanı gelince uygulama içi bildirim, sistem bildirimi (izin verilirse) ve kısa bir "ding". Hatırlatıcılar görünümü notları *Zamanı Geçenler / Bugün / Yarın / Bu Hafta / Daha Sonra* olarak gruplar.
+* 📦 **Arşiv:** Panoyu kalabalıklaştırmayan ama silinmeyen notlar.
+* 🗑️ **Çöp Kutusu:** Silinen notlar 30 gün bekler, sonra kendiliğinden temizlenir. Geri yükleme, kalıcı silme ve "Çöpü Boşalt".
 
-### 3. Klasörleme ve Organizasyon
-* 📁 **Sol Kenar Çubuğu (Sidebar):**
-  - Masaüstünde daraltılabilir/genişletilebilir, mobilde yumuşak açılır çekmece (drawer).
-  - Varsayılan klasörler: *Gezilecek Yerler, Alışveriş, Tatlı Notlar, İzlenecekler, Fikirler & Projeler*.
-* 🎨 **Klasör Özelleştirme:** Her klasöre özel emoji ve tema rengi atanabilir.
-* ⚡ **Hızlı Filtreleme:** Tek tıkla sadece seçili klasördeki notlar listelenir. Üst barda anlık arama çubuğu ve pastel renk filtre çipleri bulunur.
+### 3. Zengin Editör
+* ✍️ **Biçimlendirme:** Kalın, italik, altı/üstü çizili, 9 yazı rengi, 5 fosforlu vurgu, H1/H2/H3, alıntı, kod bloğu, ayırıcı çizgi, bağlantı, sola/ortaya/sağa hizalama.
+* ☑️ **Listeler:** Madde imli, numaralı ve tıklanabilir yapılacaklar listesi (iç içe listeler `Tab` / `Shift+Tab`).
+* ⚡ **Markdown Kısayolları:** Satır başında `# ` `## ` `### ` başlık, `- ` liste, `1. ` numaralı liste, `[] ` yapılacak, `> ` alıntı, ` ``` ` kod; `---` + Enter ayırıcı.
+* 📸 **Görseller:** Fotoğraf yükle, **yapıştır** ya da editöre **sürükle-bırak**; tam ekran galeri ve indirme.
+* 🖌️ **Çizim:** Parmak, kalem veya fareyle eskiz; nota görsel olarak eklenir.
+* 🎤 **Sesle Yazma:** Türkçe dikte (Chrome / Edge).
+* 🔊 **Sesli Okuma:** Notu Türkçe seslendirme.
+* 🎯 **Odak Modu:** Dikkat dağıtıcıları gizleyen sade yazım ekranı.
+* 🕰️ **Sürüm Geçmişi:** Her düzenleme oturumundan önceki hal saklanır (son 30 sürüm); önizle ve tek tıkla geri yükle.
+* 🔤 **Not Bazında Font:** Modern Sans, El Yazısı (*Caveat*), Daktilo (*Space Mono*), Zarif Roman (*Playfair Display*).
 
-### 4. Ortak Çalışma ve İşlevler
-* ⚡ **Canlı Eşitleme (Real-time Sync):** Dahili Socket.IO sunucusu ve BroadcastChannel sayesinde iki veya daha fazla kullanıcı/cihaz bağlandığında not ekleme, güncelleme, silme ve sıralama anında eşzamanlanır.
-* 👑 **Not İmzası:** Kartın altında notu en son kimin düzenlediğini gösteren minik isim ve avatar rozeti (`👤 Yunus • Az önce`).
-* 📌 **Sabitleme (Pin):** Önemli notları en üstteki "Sabitlenen Notlar" bölümüne sabitleme özelliği.
+### 4. Hızlı Başlangıç
+* 🧩 **10 Şablon:** Yapılacaklar, Toplantı Notu, Günlük, Alışveriş Listesi, Haftalık Plan, Proje Fikri, Tarif, Kitap Notu, Seyahat Planı, Hedef Takibi.
+* ⌨️ **Komut Paleti (`Ctrl + K`):** Notlarda ara ve aç, şablondan not oluştur, görünüm/tema değiştir, klasörlere git, yedek al — hepsi klavyeden.
+
+### 5. Dışa Aktarma & Yedekleme
+* ⬇️ Not bazında **Markdown (.md)**, **Web sayfası (.html)**, **düz metin (.txt)** ve **Yazdır / PDF**.
+* 📚 Tüm notları tek Markdown dosyası olarak indirme; JSON yedek alma/geri yükleme; depolama kullanım göstergesi.
+
+### 6. İstatistikler
+* 📊 Toplam not, kelime sayısı, bu hafta düzenlenenler, üretkenlik serisi, son 15 haftalık etkinlik ısı haritası, görev tamamlama oranı, renk/klasör/etiket dağılımları.
+
+### 7. Ortak Çalışma
+* ⚡ **Canlı Eşitleme:** Dahili Socket.IO sunucusu ile not ekleme, düzenleme, arşivleme, çöp kutusu ve sıralama anında eşzamanlanır. Aynı tarayıcıdaki sekmeler BroadcastChannel ile eşitlenir.
+* 🔗 **Davet:** Oda bağlantısı, QR kod ve paylaşım menüsü.
+* 👑 **Not İmzası:** Kartın altında notu en son kimin düzenlediği (`👤 Yunus • Az önce`).
+
+### 8. Kişiselleştirme
+* 🌗 **Temalar:** Açık Bej, Koyu Gece, Pudra Pembe, Bebek Mavisi ve cihazı takip eden **Sistem** teması.
+* ⚙️ **Varsayılanlar:** Yeni notların rengi, yazı tipi ve türü; yazım denetimi; bildirim sesi.
+
+---
+
+## ⌨️ Klavye Kısayolları
+
+| Kısayol | İşlev |
+|---|---|
+| `Ctrl + K` | Komut paleti |
+| `/` | Panodaki aramaya odaklan |
+| `Alt + N` | Yeni not |
+| `?` | Kısayol listesi |
+| `Esc` | Açık pencereyi kapat / editörü kaydedip kapat |
+| `Ctrl + S` | (Editörde) hemen kaydet |
+| `Ctrl + K` | (Editörde) bağlantı ekle |
+| `Ctrl + Shift + X` | Üstü çizili |
+| `Ctrl + Shift + 7 / 8 / 9` | Numaralı / madde / yapılacak listesi |
+| `Shift + Tık` | Notu seç |
+| `Ctrl + A` / `Delete` | (Seçim modunda) tümünü seç / çöpe taşı |
 
 ---
 
@@ -75,4 +100,23 @@ npm run electron:dev
 ```bash
 npm run electron:build
 ```
-> Derleme tamamlandığında `dist-electron/` klasörü içinde hem taşınabilir bağımsız **`YuPPi Notes.exe` (Portable)** hem de **Kurulum Dosyası (NSIS Installer)** hazır olacaktır.
+> Derleme tamamlandığında `build-exe/` klasörü içinde hem taşınabilir bağımsız **`YuPPi Notes.exe` (Portable)** hem de **Kurulum Dosyası (NSIS Installer)** hazır olacaktır.
+
+---
+
+## 🗂️ Proje Yapısı (özet)
+
+```
+src/
+  app/            Sayfa, yerleşim ve genel stiller (tema değişkenleri)
+  context/        NotesContext (veri, eşitleme), UIContext (tercihler, seçim), ThemeContext, UserContext
+  components/
+    Board/        Pano, araç çubuğu, toplu işlem çubuğu, hızlı post-it
+    Card/         Not kartı, liste satırı, galeri
+    Editor/       Tam sayfa editör, zengin metin, hatırlatıcı, çizim, sürüm geçmişi, şablonlar
+    Common/       Komut paleti, istatistikler, kısayollar, onay penceresi, bildirimler
+    Sidebar/      Kenar çubuğu, ayarlar, klasör ve davet pencereleri
+  utils/          Depolama (IndexedDB), güvenli HTML, dışa aktarma, şablonlar, hatırlatıcılar, geçmiş
+server.js         Next.js + Socket.IO sunucusu (ortak odalar data/rooms altında saklanır)
+electron/         Masaüstü kabuğu
+```

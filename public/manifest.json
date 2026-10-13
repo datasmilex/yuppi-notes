@@ -2,7 +2,7 @@
   "id": "/",
   "name": "YuPPi Notes - Post-it Not Pano",
   "short_name": "YuPPi Notes",
-  "description": "Cıvıl cıvıl renkli post-it not panosu ve canlı çalışma uygulaması",
+  "description": "Cıvıl cıvıl renkli post-it not panosu: hatırlatıcılar, şablonlar, arşiv, sürüm geçmişi ve canlı ortak çalışma",
   "lang": "tr",
   "start_url": "/",
   "scope": "/",
@@ -23,12 +23,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ]
 }

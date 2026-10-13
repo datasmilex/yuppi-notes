@@ -10,6 +10,11 @@ export type NoteKind = 'quick' | 'comprehensive';
 
 export type SortMode = 'manual' | 'updated' | 'created' | 'title';
 
+/** Panoda hangi not kümesinin listelendiği (klasör seçimi yalnızca 'notes' görünümünde geçerlidir). */
+export type BoardView = 'notes' | 'reminders' | 'archive' | 'trash';
+
+export type ViewMode = 'grid' | 'list';
+
 export interface NoteUser {
   id: string;
   name: string;
@@ -36,6 +41,9 @@ export interface Note {
   customHeight?: number; // Boyutlandırma ile belirlenen yükseklik
   customWidth?: number; // Boyutlandırma ile belirlenen genişlik
   colSpan?: number; // Izgara sütun genişliği (1-5)
+  isArchived?: boolean; // Arşivlenen notlar ana panoda görünmez
+  deletedAt?: number | null; // Çöp kutusuna taşınma zamanı (null: silinmemiş)
+  reminderAt?: number | null; // Hatırlatıcı zamanı (ms)
   scope: NoteScope; // 'local' or 'shared'
   roomId?: string; // If shared, the room ID
   lastEditedBy: {
@@ -70,3 +78,8 @@ export interface ColorDefinition {
   badgeHex: string;
   textClass: string;
 }
+
+/** Yeni not açılırken editöre önceden doldurulacak alanlar (şablonlar, hızlı başlangıçlar). */
+export type NoteSeed = Partial<
+  Pick<Note, 'title' | 'content' | 'kind' | 'color' | 'font' | 'tags' | 'stickers' | 'folderId' | 'reminderAt' | 'images'>
+>;

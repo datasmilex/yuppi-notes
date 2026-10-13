@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Maximize2, X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { useEscape } from '../../hooks/useEscape';
 
 interface ImageGalleryProps {
   images: string[];
@@ -21,14 +22,12 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   const count = images?.length || 0;
   const isLightboxOpen = selectedImageIndex !== null;
 
-  // Klavye: Esc kapatır (editörü kapatmaz), ok tuşları gezinir
+  // Klavye: Esc yalnızca büyük görünümü kapatır (editörü değil), ok tuşları gezinir
+  useEscape(isLightboxOpen, () => setSelectedImageIndex(null));
   useEffect(() => {
     if (!isLightboxOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        setSelectedImageIndex(null);
-      } else if (e.key === 'ArrowRight') {
+      if (e.key === 'ArrowRight') {
         setSelectedImageIndex((prev) => (prev === null ? null : (prev + 1) % count));
       } else if (e.key === 'ArrowLeft') {
         setSelectedImageIndex((prev) => (prev === null ? null : (prev - 1 + count) % count));
@@ -157,7 +156,10 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             e.stopPropagation();
             setSelectedImageIndex(null);
           }}
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 z-[58] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Görsel önizleme"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -168,12 +170,24 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
               alt={noteTitle}
               className="max-w-full max-h-[82vh] object-contain rounded-2xl shadow-2xl border-2 border-white/20"
             />
-            <button
-              onClick={() => setSelectedImageIndex(null)}
-              className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
-            >
-              <X className="w-6 h-6" />
-            </button>
+            <div className="absolute -top-12 right-0 flex items-center gap-2">
+              <a
+                href={images[selectedImageIndex]}
+                download={`${noteTitle || 'gorsel'}-${selectedImageIndex + 1}.jpg`}
+                className="p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+                title="Görseli indir"
+                aria-label="Görseli indir"
+              >
+                <Download className="w-6 h-6" />
+              </a>
+              <button
+                onClick={() => setSelectedImageIndex(null)}
+                className="p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+                aria-label="Kapat"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
             {images.length > 1 && (
               <div className="flex items-center gap-4 mt-3 text-white">

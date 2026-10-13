@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useNotes } from '../../context/NotesContext';
 import { useToast } from '../Common/Toast';
+import { useUI } from '../../context/UIContext';
 import { NoteColor } from '../../types/note';
 import { NOTE_COLORS } from '../../utils/colors';
 import { plainTextToHtml } from '../../utils/text';
@@ -11,10 +12,11 @@ import { StickyNote, Check } from 'lucide-react';
 export const QuickStickyCreator: React.FC = () => {
   const { createNote, activeFolderId, activeScope } = useNotes();
   const { showToast } = useToast();
+  const { prefs } = useUI();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [content, setContent] = useState('');
-  const [selectedColor, setSelectedColor] = useState<NoteColor>('yellow');
+  const [selectedColor, setSelectedColor] = useState<NoteColor>(prefs.defaultColor);
 
   const handlePost = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -47,7 +49,10 @@ export const QuickStickyCreator: React.FC = () => {
     return (
       <div>
         <button
-          onClick={() => setIsExpanded(true)}
+          onClick={() => {
+            setSelectedColor(prefs.defaultColor);
+            setIsExpanded(true);
+          }}
           className="w-full py-4 px-5 rounded-3xl border-2 border-dashed border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 flex items-center justify-center gap-2.5 font-bold text-xs sm:text-sm transition-all hover:scale-[1.01] active:scale-[0.99] shadow-2xs group"
         >
           <span className="p-1.5 rounded-xl bg-amber-200 text-amber-900 group-hover:rotate-12 transition-transform">
@@ -103,7 +108,7 @@ export const QuickStickyCreator: React.FC = () => {
           type="button"
           onClick={() => handlePost()}
           disabled={!content.trim()}
-          className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-gray-950 text-white text-xs font-bold shadow-md hover:bg-black disabled:opacity-40 transition-all"
+          className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-ink text-on-ink text-xs font-bold shadow-md hover:bg-ink/85 disabled:opacity-40 transition-all"
         >
           <Check className="w-3.5 h-3.5" />
           İliştir
