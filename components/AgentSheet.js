@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import AgentCard from './AgentCard';
 import AdultConsent from './AdultConsent';
+import PrivacyConsent from './PrivacyConsent';
+import { hasPrivacyConsent, savePrivacyConsent } from '@/lib/legal';
 import { getSupabase } from '@/lib/supabase';
 import { getDeviceId } from '@/lib/device';
 import { friendlyError } from '@/lib/errors';
@@ -11,6 +13,7 @@ export default function AgentSheet({ open, onClose, onStarted }) {
   const [error, setError] = useState('');
   const [connecting, setConnecting] = useState(null);
   const [consentFor, setConsentFor] = useState(null);
+  const [privacyFor, setPrivacyFor] = useState(null);
 
   useEffect(() => {
     if (!open) return;
@@ -29,8 +32,16 @@ export default function AgentSheet({ open, onClose, onStarted }) {
   }, [open, onClose]);
 
   function connect(agent) {
+    if (!hasPrivacyConsent()) { setPrivacyFor(agent); return; }
     if (agent.is_adult) setConsentFor(agent);
     else doConnect(agent, false);
+  }
+
+  function acceptPrivacy() {
+    const agent = privacyFor;
+    savePrivacyConsent();
+    setPrivacyFor(null);
+    connect(agent);
   }
 
   async function doConnect(agent, adultConsent) {
@@ -38,7 +49,7 @@ export default function AgentSheet({ open, onClose, onStarted }) {
     setConnecting(agent.id);
     setError('');
     const { data, error } = await getSupabase().rpc('create_request', {
-      p_agent: agent.id, p_device: getDeviceId(), p_adult_consent: adultConsent,
+      p_agent: agent.id, p_device: getDeviceId(), p_adult_consent: adultConsent, p_privacy_consent: hasPrivacyConsent(),
     });
     setConnecting(null);
     if (error || !data?.[0]) { setError(friendlyError(error)); return; }
@@ -67,6 +78,7 @@ export default function AgentSheet({ open, onClose, onStarted }) {
           ))}
         </div>
       </section>
+      {privacyFor && <PrivacyConsent onAccept={acceptPrivacy} onCancel={() => setPrivacyFor(null)} />}
       {consentFor && (
         <AdultConsent
           agentName={consentFor.display_name}

@@ -55,7 +55,7 @@ export default function Home() {
         <h2 className="section-title">Nasıl çalışır?</h2>
         <ol>
           <li><b>1</b><div><strong>Dertleş’e dokun</strong><span>Aşağıdaki butondan temsilcileri gör.</span></div></li>
-          <li><b>2</b><div><strong>Birini seç</strong><span>İlayda, Yunus ya da Gizem; kiminle konuşmak istersen.</span></div></li>
+          <li><b>2</b><div><strong>Birini seç</strong><span>Sana en iyi gelecek temsilciyi seç.</span></div></li>
           <li><b>3</b><div><strong>Sıranı bekle</strong><span>Tahmini bekleme süreni anlık olarak görürsün.</span></div></li>
           <li><b>4</b><div><strong>Anlat</strong><span>Temsilci kabul edince sohbet başlar.</span></div></li>
         </ol>
@@ -89,6 +89,7 @@ export default function Home() {
 
       <footer className="footer">
         <span>© {new Date().getFullYear()} Dertleş</span>
+        <a href="/gizlilik">Gizlilik ve KVKK</a>
         <a href="/panel">Temsilci girişi</a>
       </footer>
 
