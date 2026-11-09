@@ -79,7 +79,7 @@ export default function VisitorSession({ session, onExit }) {
       <header className="session-head">
         <Avatar name={agent.display_name} url={agent.avatar_url} size={40} />
         <div className="session-title">
-          <strong>{agent.display_name}</strong>
+          <strong>{agent.display_name}{(info?.adult || agent.is_adult) && <span className="adult-badge">+18</span>}</strong>
           <span className="muted small">
             {status === 'active' ? (chat.otherTyping ? 'yazıyor…' : 'Sohbette') : status === 'waiting' ? 'İsteğin iletildi' : 'Görüşme'}
           </span>

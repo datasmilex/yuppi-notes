@@ -9,6 +9,7 @@ const FAQ = [
   ['Kimliğimi vermem gerekiyor mu?', 'Hayır. Hesap, isim, telefon ya da e-posta istemiyoruz. Tamamen anonimsin.'],
   ['Temsilciler kim?', 'Temsilcilerimiz seni yargılamadan dinlemek için burada olan gönüllülerdir. Psikolog ya da terapist değillerdir; profesyonel desteğin yerini tutmazlar.'],
   ['Neden beklemem gerekiyor?', 'Her temsilci aynı anda yalnızca bir kişiyle konuşur ki tüm dikkati sende olsun. Sıran gelince temsilci isteğini kabul eder ve sohbet başlar.'],
+  ['+18 rozeti ne demek?', '+18 rozetli temsilcilerle yapılan sohbetlerde argo ve küfürlü dil serbesttir. Bağlanmadan önce 18 yaşından büyük olduğunu beyan edip kuralları onaylaman istenir. Cinsel içerik, tehdit ve nefret söylemi bu sohbetlerde de yasaktır.'],
   ['Sohbeti nasıl bitiririm?', 'Sohbet ekranındaki “Sohbeti bitir” butonuna dokunman yeterli. Dilersen sonrasında görüşmeyi puanlayabilirsin.'],
 ];
 

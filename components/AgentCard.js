@@ -26,7 +26,10 @@ export default function AgentCard({ agent, onConnect, connecting }) {
         <Avatar name={agent.display_name} url={agent.avatar_url} size={60} />
         <div className="agent-info">
           <div className="agent-name-row">
-            <h3>{agent.display_name}</h3>
+            <h3>
+              {agent.display_name}
+              {agent.is_adult && <span className="adult-badge" title="Argo/küfürlü dil serbest, yalnızca 18 yaş üstü">+18</span>}
+            </h3>
             <span className={`pill ${st.key}`}><i />{st.label}</span>
           </div>
           <div className="agent-sub">

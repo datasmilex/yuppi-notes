@@ -298,3 +298,17 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .sched-row input[type='time'] { border: 0; background: var(--cream-2); border-radius: 10px; padding: 6px 8px; font-size: 15px; }
 .sched-row input[type='checkbox'] { width: 20px; height: 20px; accent-color: var(--brown); }
 @media (max-width: 400px) { .sched-row { grid-template-columns: 1fr auto; } .sched-row .times { grid-column: 1 / -1; } }
+
+/* ---------- +18 ---------- */
+.adult-badge {
+  display: inline-block; margin-left: 8px; vertical-align: middle; font-size: .68rem; font-weight: 800;
+  background: var(--red); color: #fff; border-radius: 6px; padding: 2px 6px; letter-spacing: .02em;
+}
+.adult-tag { background: #f5dcd3; color: #7d3524; margin-left: 6px; }
+.q-item .tag { margin-top: 4px; display: inline-block; }
+.switch.adult.on .track { background: var(--red); }
+.switch:disabled { opacity: .5; cursor: not-allowed; }
+.consent { display: flex; gap: 10px; align-items: flex-start; background: var(--cream-2); border-radius: 12px; padding: 10px 12px; cursor: pointer; font-size: .92rem; }
+.consent input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--brown); flex-shrink: 0; }
+.modal .rules { gap: 6px; }
+.modal { max-height: 90dvh; overflow-y: auto; }

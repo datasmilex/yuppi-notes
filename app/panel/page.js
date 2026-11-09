@@ -44,12 +44,13 @@ function Dashboard({ agent, setAgent, signOut }) {
   const [rateFor, setRateFor] = useState(null); // { request, by, blocked }
   const [rating, setRating] = useState(0);
   const [notifPerm, setNotifPerm] = useState('default');
+  const [adultModal, setAdultModal] = useState(false);
   const finishedIds = useRef(new Set());
   const activeRef = useRef(null);
 
   const load = useCallback(async () => {
     const { data, error } = await sb.from('chat_requests')
-      .select('id, status, created_at, last_seen_at, accepted_at, channel_key')
+      .select('id, status, created_at, last_seen_at, accepted_at, channel_key, adult_consent_at')
       .eq('agent_id', agent.id).in('status', ['waiting', 'active'])
       .order('created_at', { ascending: true });
     if (error) { setErr('İstekler yüklenemedi.'); return; }
@@ -120,6 +121,13 @@ function Dashboard({ agent, setAgent, signOut }) {
     else setAgent({ ...agent, is_online: next });
   }
 
+  async function setAdult(next) {
+    setAdultModal(false);
+    const { error } = await sb.from('agents').update({ is_adult: next, updated_at: new Date().toISOString() }).eq('id', agent.id);
+    if (error) setErr(friendlyError(error));
+    else setAgent({ ...agent, is_adult: next });
+  }
+
   async function accept(id) {
     setErr('');
     const { error } = await sb.rpc('agent_accept', { p_id: id });
@@ -156,6 +164,15 @@ function Dashboard({ agent, setAgent, signOut }) {
           <button className={`switch ${agent.is_online ? 'on' : ''}`} onClick={toggleOnline} aria-pressed={agent.is_online}>
             <span className="track" /> <span>{agent.is_online ? 'Çevrimiçi' : 'Çevrimdışı'}</span>
           </button>
+          <button
+            className={`switch adult ${agent.is_adult ? 'on' : ''}`}
+            onClick={() => (agent.is_adult ? setAdult(false) : setAdultModal(true))}
+            disabled={!!active}
+            aria-pressed={agent.is_adult}
+            title={active ? 'Sohbet sürerken +18 modu değiştirilemez' : '+18 modu: argo/küfürlü dil serbest'}
+          >
+            <span className="track" /> <span>+18</span>
+          </button>
           <a className="btn btn-ghost btn-sm" href="/panel/profil">Profilim</a>
           <button className="btn btn-ghost btn-sm" onClick={signOut}>Çıkış</button>
         </div>
@@ -191,6 +208,9 @@ function Dashboard({ agent, setAgent, signOut }) {
                         <strong>{i + 1}. {visitorLabel(r.id)}</strong>
                         <span className="small muted">{since(r.created_at, now)} bekliyor</span>
                         {stale && <span className="small stale"> · sayfadan ayrılmış olabilir</span>}
+                        {agent.is_adult && (r.adult_consent_at
+                          ? <span className="tag adult-tag">+18 onaylı</span>
+                          : <span className="tag">+18 onayı yok · kabul edilemez</span>)}
                       </div>
                       <div className="q-actions">
                         <button className="btn btn-ghost btn-sm" onClick={() => decline(r.id)}>Reddet</button>
@@ -225,6 +245,25 @@ function Dashboard({ agent, setAgent, signOut }) {
           </section>
         )}
       </div>
+
+      {adultModal && (
+        <div className="modal-wrap">
+          <div className="modal">
+            <h3>+18 modunu aç</h3>
+            <p className="muted">Kartında “+18” rozeti görünür. Sana bağlanmak isteyen ziyaretçiler önce 18 yaşından büyük olduklarını beyan edip argo/küfürlü dil kurallarını kabul eder.</p>
+            <ul className="rules small">
+              <li>Argo ve küfür serbest; <b>cinsel/müstehcen içerik yine yasak.</b></li>
+              <li>Ziyaretçiye ya da başkalarına yönelik tehdit, nefret söylemi ve aşağılama yasak.</li>
+              <li>Karşındakinin 18 yaşından küçük olduğunu fark edersen sohbeti hemen bitir.</li>
+              <li>Mod, sohbet sürerken değiştirilemez; açıldıktan sonra yalnızca onaylı ziyaretçileri kabul edebilirsin.</li>
+            </ul>
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={() => setAdultModal(false)}>Vazgeç</button>
+              <button className="btn btn-primary" onClick={() => setAdult(true)}>Anladım, aç</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {rateFor && (
         <div className="modal-wrap">

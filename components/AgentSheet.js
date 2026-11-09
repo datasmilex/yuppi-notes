@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import AgentCard from './AgentCard';
+import AdultConsent from './AdultConsent';
 import { getSupabase } from '@/lib/supabase';
 import { getDeviceId } from '@/lib/device';
 import { friendlyError } from '@/lib/errors';
@@ -9,6 +10,7 @@ export default function AgentSheet({ open, onClose, onStarted }) {
   const [agents, setAgents] = useState(null);
   const [error, setError] = useState('');
   const [connecting, setConnecting] = useState(null);
+  const [consentFor, setConsentFor] = useState(null);
 
   useEffect(() => {
     if (!open) return;
@@ -26,14 +28,22 @@ export default function AgentSheet({ open, onClose, onStarted }) {
     return () => { alive = false; clearInterval(t); window.removeEventListener('keydown', onKey); };
   }, [open, onClose]);
 
-  async function connect(agent) {
+  function connect(agent) {
+    if (agent.is_adult) setConsentFor(agent);
+    else doConnect(agent, false);
+  }
+
+  async function doConnect(agent, adultConsent) {
+    setConsentFor(null);
     setConnecting(agent.id);
     setError('');
-    const { data, error } = await getSupabase().rpc('create_request', { p_agent: agent.id, p_device: getDeviceId() });
+    const { data, error } = await getSupabase().rpc('create_request', {
+      p_agent: agent.id, p_device: getDeviceId(), p_adult_consent: adultConsent,
+    });
     setConnecting(null);
     if (error || !data?.[0]) { setError(friendlyError(error)); return; }
     const row = data[0];
-    onStarted({ id: row.request_id, token: row.token, channelKey: row.channel_key, agent: { id: agent.id, display_name: agent.display_name, avatar_url: agent.avatar_url } });
+    onStarted({ id: row.request_id, token: row.token, channelKey: row.channel_key, agent: { id: agent.id, display_name: agent.display_name, avatar_url: agent.avatar_url, is_adult: adultConsent } });
   }
 
   return (
@@ -57,6 +67,13 @@ export default function AgentSheet({ open, onClose, onStarted }) {
           ))}
         </div>
       </section>
+      {consentFor && (
+        <AdultConsent
+          agentName={consentFor.display_name}
+          onAccept={() => doConnect(consentFor, true)}
+          onCancel={() => setConsentFor(null)}
+        />
+      )}
     </div>
   );
 }
